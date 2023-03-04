@@ -21,11 +21,15 @@ pose.onResults(onPose);
 function processVideo() {
   pose.send({image: videoElement});
   canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-  requestAnimationFrame(processVideo);
+  
+	setTimeout(function() {
+		requestAnimationFrame(processVideo);	
+	}, 100);
 }
 
 // MediaPipe Pose 결과를 이용하여 랜드마크 그리기
 function onPose(results) {
+	console.log(results);
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
   canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
@@ -37,7 +41,6 @@ function onPose(results) {
                 {color: '#FF0000', lineWidth: 2});
     //drawLandmarks(results.poseLandmarks);
   }
-  console.log("yessss");
   canvasCtx.restore();
 }
 
@@ -50,6 +53,8 @@ function drawLandmarks(landmarks) {
     canvasCtx.fill();
   }
 }
+
+
 
 // 비디오 재생 후, 프레임 처리 시작
 videoElement.onloadedmetadata = () => {

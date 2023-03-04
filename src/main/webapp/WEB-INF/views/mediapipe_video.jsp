@@ -11,8 +11,8 @@
 </head>
 <body>
     <div class="container">
-		<video class="input_video" width="1280px" height="720px" controls>
-            <source src="./video/test2.mp4" type="video/mp4"></source>
+		<video src="./video/test2.mp4" class="input_video" width="1280px" height="720px" controls>
+            
         </video> 
 		<canvas class="output_canvas" width="1280px" height="720px"></canvas>
 		<div class="landmark-grid-container"></div>
