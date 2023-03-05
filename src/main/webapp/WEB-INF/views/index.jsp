@@ -14,6 +14,8 @@
 <body>
 	<h1>main page</h1>
 	
+	<a href="./pose"> video 영상 test</a>
+	
 	<div class="container">
 		<video class="input_video"></video>
 		<canvas class="output_canvas" width="1280px" height="720px"></canvas>

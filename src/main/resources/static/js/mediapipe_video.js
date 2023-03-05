@@ -8,6 +8,7 @@ const pose = new Pose({
     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
   }
 });
+
 pose.setOptions({
   modelComplexity: 1,
   smoothLandmarks: true,
@@ -17,14 +18,39 @@ pose.setOptions({
 });
 pose.onResults(onPose);
 
+
+const videoElement = document.getElementsByClassName('input_video')[0];
+const canvasElement = document.getElementsByClassName('output_canvas')[0];
+
+
+
+
+
+
 // 비디오 프레임 처리 및 랜드마크 그리기
 function processVideo() {
-  pose.send({image: videoElement});
-  canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+  	pose.send({image: videoElement});
+  	canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
   
+  	if(videoElement.paused){
+		
+		restartVideo();
+		return;
+	}
 	setTimeout(function() {
-		requestAnimationFrame(processVideo);	
-	}, 100);
+			requestAnimationFrame(processVideo);	
+	}, 150);
+
+}
+
+function restartVideo(){ // 비디오 중단시, processVideo() 함수 대신 이 함수가 돌아가며 재생을 탐지
+	if(!videoElement.paused){
+		processVideo();
+		return;
+	}
+	setTimeout(function() {
+			restartVideo();
+	}, 500);
 }
 
 // MediaPipe Pose 결과를 이용하여 랜드마크 그리기
@@ -53,7 +79,6 @@ function drawLandmarks(landmarks) {
     canvasCtx.fill();
   }
 }
-
 
 
 // 비디오 재생 후, 프레임 처리 시작
