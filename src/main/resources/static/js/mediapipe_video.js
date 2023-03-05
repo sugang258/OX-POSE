@@ -1,39 +1,47 @@
-// HTML에서 <video> 태그와 <canvas> 태그를 가져옴
-const videoElement = document.getElementsByClassName('input_video')[0];
-const canvasElement = document.getElementsByClassName('output_canvas')[0];
 
 // MediaPipe Pose 모델 로딩
-const pose = new Pose({
+var pose = new Pose({
   locateFile: (file) => {
     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
   }
 });
 
-pose.setOptions({
-  modelComplexity: 1,
-  smoothLandmarks: true,
-  enableSegmentation: false,
-  minDetectionConfidence: 0.5,
-  minTrackingConfidence: 0.5
-});
-pose.onResults(onPose);
 
-
-const videoElement = document.getElementsByClassName('input_video')[0];
+var videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 
 
-
-
-
-
+$('#chooseVideo').change(analysis); // 동영상 선택시
+analysis(); // 페이지 실행시 첫 실행
+function analysis() {
+    	videoElement.pause();
+	  	videoElement.setAttribute("src", $('#chooseVideo').val());
+	  	pose.reset();
+	  	pose.setOptions({
+		  modelComplexity: 1,
+		  smoothLandmarks: true,
+		  enableSegmentation: false,
+		  minDetectionConfidence: 0.5,
+		  minTrackingConfidence: 0.5
+		});
+	  	pose.onResults(onPose);
+	 	videoElement.load();
+   		
+   		// 비디오 재생 후, 프레임 처리 시작
+	videoElement.onloadedmetadata = () => {
+	  canvasElement.width = videoElement.videoWidth;
+	  canvasElement.height = videoElement.videoHeight;
+	  canvasCtx = canvasElement.getContext('2d');
+	  processVideo();
+	};
+}
 // 비디오 프레임 처리 및 랜드마크 그리기
 function processVideo() {
+	
   	pose.send({image: videoElement});
   	canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
   
   	if(videoElement.paused){
-		
 		restartVideo();
 		return;
 	}
@@ -81,12 +89,6 @@ function drawLandmarks(landmarks) {
 }
 
 
-// 비디오 재생 후, 프레임 처리 시작
-videoElement.onloadedmetadata = () => {
-  canvasElement.width = videoElement.videoWidth;
-  canvasElement.height = videoElement.videoHeight;
-  canvasCtx = canvasElement.getContext('2d');
-  processVideo();
-};
+
 //videoElement.src = './video/test2.mp4';
 
