@@ -4,8 +4,11 @@ const canvasCtx = canvasElement.getContext('2d');
 const landmarkContainer = document.getElementsByClassName('landmark-grid-container')[0];
 const grid = new LandmarkGrid(landmarkContainer);
 
+const leftIndices = [11, 13, 15, 17, 19, 21];
+const rightIndices = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+
 function onResults(results) {
-  console.log(results.poseWorldLandmarks);
+  console.log(results.poseLandmarks);
   //result : pose_landmarks / pose_world_landmarks
   //pose_landmarks : 포즈 랜드마크 목록
   //pose_world_landmarks : 세계 좌표의 또 다른 포즈 랜드마크 목록
@@ -13,6 +16,7 @@ function onResults(results) {
     grid.updateLandmarks([]);
     return;
   }
+  const keyPoint = results.poseLandmarks;
 
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -30,10 +34,20 @@ function onResults(results) {
 
   // source-over : 기본값, 대상값이 위로; 즉 처음 그려진 도형 위에 나중에 그려진 도형이 표시 됨
   canvasCtx.globalCompositeOperation = 'source-over';
+
+  for(let i = 0 ; i < keyPoint.length; i ++){
+    const color = i%2==0 ? '#FF0000' : '#0000FF';
+                  
+    //console.log(color);
+    drawLandmarks(canvasCtx,[keyPoint[i]], {
+      color: color, lineWidth: 3
+    });
+  }
+                
   drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
-                 {color: '#00FF00', lineWidth: 4});
-  drawLandmarks(canvasCtx, results.poseLandmarks,
-                {color: '#FF0000', lineWidth: 2});
+    {
+      color: '#00FF00', lineWidth: 3
+    });
   canvasCtx.restore();
 
   grid.updateLandmarks(results.poseWorldLandmarks);
