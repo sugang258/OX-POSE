@@ -50,10 +50,13 @@ function processVideo() {
 		return;
 	}
 
-	setTimeout(function() {
-		requestAnimationFrame(processVideo);
-	}, 150);
+	requestAnimationFrame(processVideo,customConfig);
 }
+
+const customConfig = {
+	  maxFPS: 30,
+	  skipFrames: 2
+};
 
 const leftIndices = [1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31];
 const rightIndices = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
