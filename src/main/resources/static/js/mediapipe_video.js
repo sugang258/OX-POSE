@@ -18,6 +18,7 @@ function analysis() {
 	videoElement.setAttribute("src", $('#chooseVideo').val());
 	pose.reset();
 	pose.setOptions({
+		upperBodyOnly: true,
 		modelComplexity: 1,
 		smoothLandmarks: true,
 		enableSegmentation: false,
@@ -36,7 +37,7 @@ function analysis() {
 	};
 }
 
-videoElement.addEventListener("playing",processVideo); // 비디오 재생시 분석 시작
+videoElement.addEventListener("playing", processVideo); // 비디오 재생시 분석 시작
 // 비디오 프레임 처리 및 랜드마크 그리기
 function processVideo() {
 
@@ -46,43 +47,48 @@ function processVideo() {
 	if (videoElement.paused) { // 비디오 정지시 분석 정지
 		return;
 	}
-	
+
 	setTimeout(function() {
 		requestAnimationFrame(processVideo);
 	}, 150);
 }
 
-
-
+const leftIndices = [11, 13, 15, 17, 19, 21];
+const rightIndices = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
 // MediaPipe Pose 결과를 이용하여 랜드마크 그리기
 function onPose(results) {
-	console.log(results);
-	canvasCtx.save();
-	canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-	canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-	//canvasCtx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-	if (results.poseLandmarks) {
+	const keyPoint = results.poseLandmarks;
+	if(keyPoint != null){
+		
+		console.log(results.poseLandmarks);
+		
+		canvasCtx.save();
+		canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+		canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+		//canvasCtx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+		
+		
+		for(let i = 0 ; i < keyPoint.length; i ++){
+			const color = i%2==0 ? '#FF0000' : '#0000FF';
+			
+			console.log(color);
+			drawLandmarks(canvasCtx,[keyPoint[i]], {
+				color: color, lineWidth: 3
+			});
+		}
+		
 		drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
-			{ color: '#00FF00', lineWidth: 4 });
-		drawLandmarks(canvasCtx, results.poseLandmarks,
-			{ color: '#FF0000', lineWidth: 2 });
-		//drawLandmarks(results.poseLandmarks);
-	}
-	canvasCtx.restore();
-}
-
-// 랜드마크 그리기 함수
-function drawLandmarks(landmarks) {
-	for (let i = 0; i < landmarks.length; i++) {
-		const landmark = landmarks[i];
-		canvasCtx.beginPath();
-		canvasCtx.arc(landmark.x * canvasElement.width, landmark.y * canvasElement.height, 5, 0, 2 * Math.PI);
-		canvasCtx.fill();
+			{
+				color: '#00FF00', lineWidth: 3
+			});
+		
+	//	drawLandmarks(results.poseLandmarks);
+		
+		canvasCtx.restore();
+	
 	}
 }
-
-
 
 //videoElement.src = './video/test2.mp4';
 
