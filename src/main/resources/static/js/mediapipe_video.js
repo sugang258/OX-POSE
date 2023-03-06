@@ -1,3 +1,5 @@
+const landmarkContainer = document.getElementsByClassName('landmark-grid-container')[0];
+const grid = new LandmarkGrid(landmarkContainer);
 
 // MediaPipe Pose 모델 로딩
 var pose = new Pose({
@@ -58,6 +60,11 @@ const rightIndices = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
 
 // MediaPipe Pose 결과를 이용하여 랜드마크 그리기
 function onPose(results) {
+	if (!results.poseLandmarks) {
+		grid.updateLandmarks([]);
+		return;
+	  }
+
 	const keyPoint = results.poseLandmarks;
 	if(keyPoint != null){
 		
@@ -72,7 +79,7 @@ function onPose(results) {
 		for(let i = 0 ; i < keyPoint.length; i ++){
 			const color = i%2==0 ? '#FF0000' : '#0000FF';
 			
-			console.log(color);
+			//console.log(color);
 			drawLandmarks(canvasCtx,[keyPoint[i]], {
 				color: color, lineWidth: 3
 			});
@@ -86,9 +93,7 @@ function onPose(results) {
 	//	drawLandmarks(results.poseLandmarks);
 		
 		canvasCtx.restore();
+		grid.updateLandmarks(results.poseWorldLandmarks);
 	
 	}
 }
-
-//videoElement.src = './video/test2.mp4';
-
