@@ -18,9 +18,7 @@
 	    <option value="./video/test1.mp4">졸업식영상(3인)</option>
 	</select>
 
-    <input id="file" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
-    <video id="video"></video>
-	
+    <input id="file" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">	
 	
 
     <div class="container">

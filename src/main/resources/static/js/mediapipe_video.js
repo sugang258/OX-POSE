@@ -1,8 +1,8 @@
 const landmarkContainer = document.getElementsByClassName('landmark-grid-container')[0];
 const grid = new LandmarkGrid(landmarkContainer);
 const inputFile = document.getElementById("file");
-//const video = document.getElementById("video");
 
+//파일 선택 시 
 inputFile.addEventListener("change", function() {
 	const file = inputFile.files[0];
 	const videourl = URL.createObjectURL(file);
