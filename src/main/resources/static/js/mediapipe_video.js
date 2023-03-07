@@ -60,9 +60,22 @@ const customConfig = {
 
 const leftIndices = [1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31];
 const rightIndices = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
+const leftConnections = [
+  [11,13],[13,15],[15,21],[15,17],[15,19],[17,19],
+  [11,23],[23,25],[25,27],[27,29],[27,31],[29,31]
+];
+const rightConnections = [
+  [12,14],[14,16],[16,22],[16,18],[16,20],[18,20],
+  [12,24],[24,26],[26,28],[28,30],[28,32],[30,32]
+];
+const centerConnections = [
+  [11,12],[23,24]
+];
+
 
 // MediaPipe Pose 결과를 이용하여 랜드마크 그리기
 function onPose(results) {
+	console.log(results);
 	if (!results.poseLandmarks) {
 		grid.updateLandmarks([]);
 		return;
@@ -87,16 +100,23 @@ function onPose(results) {
 		}
 
 		drawLandmarks(canvasCtx, leftKeyPoint, {
-			color: '#FF0000', lineWidth: 3
+			color: '#FF0000', lineWidth: 2
 		});
 		drawLandmarks(canvasCtx, rightKeyPoint, {
-			color: '#0000FF', lineWidth: 3
+			color: '#0000FF', lineWidth: 2
 		});
-		drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+		drawConnectors(canvasCtx, keyPoint, leftConnections,
+			{
+				color: '#00FFFF', lineWidth: 3
+			});
+		drawConnectors(canvasCtx, keyPoint, rightConnections,
 			{
 				color: '#00FF00', lineWidth: 3
 			});
-
+		drawConnectors(canvasCtx, keyPoint, centerConnections,
+		{
+			color: '#EEEEEE', lineWidth: 3
+		});
 		//	drawLandmarks(results.poseLandmarks);
 
 		canvasCtx.restore();
