@@ -1,5 +1,15 @@
 const landmarkContainer = document.getElementsByClassName('landmark-grid-container')[0];
 const grid = new LandmarkGrid(landmarkContainer);
+const inputFile = document.getElementById("file");
+
+//파일 선택 시 
+inputFile.addEventListener("change", function() {
+	const file = inputFile.files[0];
+	const videourl = URL.createObjectURL(file);
+	videoElement.pause();
+	videoElement.setAttribute("src", videourl);
+	poseStart();
+})
 
 // MediaPipe Pose 모델 로딩
 var pose = new Pose({
@@ -18,6 +28,11 @@ analysis(); // 페이지 실행시 첫 실행
 function analysis() {
 	videoElement.pause();
 	videoElement.setAttribute("src", $('#chooseVideo').val());
+	poseStart();
+}
+
+//mediapipe pose 모델 초기화, 세팅 후 시작
+function poseStart() {
 	pose.reset();
 	pose.setOptions({
 		upperBodyOnly: true,
