@@ -10,5 +10,10 @@ public class PoseController {
 	public String pose() {
 		return "mediapipe_video";
 	}
+	
+	@GetMapping("/multi")
+	public String multi() {
+		return "mediapipe_multi";
+	}
 
 }
