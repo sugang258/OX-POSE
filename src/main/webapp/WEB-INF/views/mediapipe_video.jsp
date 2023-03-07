@@ -17,6 +17,9 @@
 	    <option value="./video/test4.mp4" selected="selected">스키 영상(1인)</option>
 	    <option value="./video/test1.mp4">졸업식영상(3인)</option>
 	</select>
+
+    <input id="file" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
+    <video id="video"></video>
 	
 	
 
