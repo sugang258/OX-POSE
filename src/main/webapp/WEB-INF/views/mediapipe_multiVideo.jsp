@@ -59,7 +59,6 @@
 	  canvas.style.top = (video.height- canvas.height)/2 + 'px';
 	  canvas.style.left = (video.width- canvas.width)/2 + 'px';
 	  
-	  console.log(video.width+ " /" + canvas.width + "/" + (video.width - canvas.width));
 	  ctx.clearRect(0 , 0, video.width, video.height);
 // 	  ctx.drawImage(video, 0, 0 , canvas.width, canvas.height);
 	  
@@ -67,7 +66,6 @@
 		console.log('Predictions: ', prediction);
 		
 		var scaledBbox = prediction.bbox.map((val) => val * ratio );
-		
 		
 	    ctx.beginPath();
 	    ctx.rect(...scaledBbox);
