@@ -9,14 +9,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils_3d/control_utils_3d.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/objectron/objectron.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@2.2.2/dist/posenet.min.js"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@3.11.0/dist/tf-core.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@3.11.0/dist/tf-converter.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@3.11.0/dist/tf-backend-webgl.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@0.0.6/dist/pose-detection.min.js"></script>
 </head>
 
 <body>
@@ -33,65 +27,59 @@
 
 <!-- Place your code in the script tag below. You can also use an external .js file -->
 <script type="text/javascript">
-//   const canvas = document.getElementById('output_canvas');
-//   const ctx = canvas.getContext('2d');
-//   const video = document.getElementById('input_video');
+  const canvas = document.getElementById('output_canvas');
+  const ctx = canvas.getContext('2d');
+  const video = document.getElementById('input_video');
   
-// //   navigator.mediaDevices.getUserMedia({ video: true })
-// //   .then((stream) => {
-// //     video.srcObject = stream;
-// //     video.onloadedmetadata = () => {
-// //       video.play();
-// //       detectFrame();
-// //     }
-// //   });
-  
+//   navigator.mediaDevices.getUserMedia({ video: true })
+//   .then((stream) => {
+//     video.srcObject = stream;
 //     video.onloadedmetadata = () => {
-// //       video.play();
+//       video.play();
 //       detectFrame();
-//     };
+//     }
+//   });
+  
+    video.onloadedmetadata = () => {
+//       video.play();
+      detectFrame();
+    };
  
-//   video.addEventListener("playing", detectFrame);
-//   async function detectFrame() {
-// 	  const model = await cocoSsd.load();
-// 	  const predictions = await model.detect(video);
+  video.addEventListener("playing", detectFrame);
+  async function detectFrame() {
+	  const model = await cocoSsd.load();
+	  const predictions = await model.detect(video);
 	  
-// 	  const ratio = Math.min(video.width/video.videoWidth ,video.height/video.videoHeight );
+	  const ratio = Math.min(video.width/video.videoWidth ,video.height/video.videoHeight );
 	  
 	  
 	  
-// 	  canvas.width = video.videoWidth * ratio ;
-// 	  canvas.height = video.videoHeight * ratio;
-// 	  canvas.style.top = (video.height- canvas.height)/2 + 'px';
-// 	  canvas.style.left = (video.width- canvas.width)/2 + 'px';
+	  canvas.width = video.videoWidth * ratio ;
+	  canvas.height = video.videoHeight * ratio;
+	  canvas.style.top = (video.height- canvas.height)/2 + 'px';
+	  canvas.style.left = (video.width- canvas.width)/2 + 'px';
 	  
-// 	  console.log(video.width+ " /" + canvas.width + "/" + (video.width - canvas.width));
-// 	  ctx.clearRect(0 , 0, video.width, video.height);
-// // 	  ctx.drawImage(video, 0, 0 , canvas.width, canvas.height);
+	  ctx.clearRect(0 , 0, video.width, video.height);
+// 	  ctx.drawImage(video, 0, 0 , canvas.width, canvas.height);
 	  
-// 	  predictions.forEach(prediction => {
-// 		console.log('Predictions: ', prediction);
+	  predictions.forEach(prediction => {
+		console.log('Predictions: ', prediction);
 		
-// 		var scaledBbox = prediction.bbox.map((val) => val * ratio );
+		var scaledBbox = prediction.bbox.map((val) => val * ratio );
 		
-		
-// 	    ctx.beginPath();
-// 	    ctx.rect(...scaledBbox);
-// 	    ctx.lineWidth = 3;
-// 	    ctx.strokeStyle = 'lime';
-// 	    ctx.fillStyle = 'lime';
-// 	    ctx.stroke();
-// 	    ctx.fillText(prediction.class, scaledBbox[0], scaledBbox[1] - 5);
-// 	  });
+	    ctx.beginPath();
+	    ctx.rect(...scaledBbox);
+	    ctx.lineWidth = 3;
+	    ctx.strokeStyle = 'lime';
+	    ctx.fillStyle = 'lime';
+	    ctx.stroke();
+	    ctx.fillText(prediction.class, scaledBbox[0], scaledBbox[1] - 5);
+	  });
 	  
-// 	  if(!video.paused){
-// 		  requestAnimationFrame(detectFrame);
-// 	  }
-
-
-// 	}
+	  if(!video.paused){
+		  requestAnimationFrame(detectFrame);
+	  }
+	}
 </script>
-<script type="text/javascript" src="./js/mediapipe_multi.js"></script>
-
 </body>
 </html>
