@@ -14,6 +14,7 @@ public class PoseService {
 	
 	private List<List<PoseVO>> result = new ArrayList<>();
 	private List<PoseVO> list = new ArrayList<>();
+	
 	private int num = 1;
 	
 	public void posePrint(List<Map<String, Object>> data) {
@@ -27,8 +28,7 @@ public class PoseService {
 			poseVO.setY(Double.valueOf(data.get(i).get("y").toString()));
 			poseVO.setVisibility(Double.valueOf(data.get(i).get("visibility").toString()));
 						
-			result.get(i).add(poseVO);
-//			list.add(poseVO);
+			list.add(poseVO);
 		}
 		num++;
 		result.add(list);
