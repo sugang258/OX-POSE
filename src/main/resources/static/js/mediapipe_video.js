@@ -43,6 +43,7 @@ function poseStart() {
 		minTrackingConfidence: 0.5
 	});
 	pose.onResults(onPose);
+	// poseprint(pose.onResults(onPose));
 	videoElement.load();
 
 	// 비디오 재생 후, 프레임 처리 시작
@@ -91,12 +92,31 @@ const centerConnections = [
 // MediaPipe Pose 결과를 이용하여 랜드마크 그리기
 function onPose(results) {
 	console.log(results);
+	// poseprint(results);
 	if (!results.poseLandmarks) {
 		grid.updateLandmarks([]);
 		return;
 	}
 
 	const keyPoint = results.poseLandmarks;
+	var jsonData = JSON.stringify(keyPoint);
+
+	console.log(jsonData);
+
+	$.ajax({
+		type :'POST',
+		url :'poseprint',
+		contentType:'application/json',
+		processData : false,
+		dataType : 'json',
+		data : jsonData,
+		success : function(data) {
+			console.log('전송완료');
+		}
+	})
+
+
+
 	let leftKeyPoint = [];
 	let rightKeyPoint = [];
 	if (keyPoint != null) {
@@ -138,4 +158,21 @@ function onPose(results) {
 		grid.updateLandmarks(results.poseWorldLandmarks);
 
 	}
+}
+
+function poseprint(results) {
+	console.log(results);
+
+	var keyPoint = results.poseLandmarks;
+
+	var list = new Array();
+
+	for(let i=1;i<=keyPoint.length;i++) {
+		var data = new Object();
+		data.num = i;
+		data.point = keyPoint[i];
+
+		console.log(data);
+	}
+
 }
