@@ -33,7 +33,7 @@
 	width: 90%;
 	aspect-ratio: 9/16;
 	}
-.user_button{
+.user_button_box{
 	display : flex;
 	justify-content : center;
 	align-items : center;
@@ -42,7 +42,7 @@
 	
 /* 	display: none; */
 }
-.user_video{
+.user_video_box{
 	display: none;
 }
 #input_video_button{
@@ -79,16 +79,22 @@
 					<button>비교 영상 직접 선택</button>
 					<button>샘플 영상 선택</button>
 				</div>
-				<video class="video compare_video" src="./video/test4.mp4" controls></video>
+				<div>
+					<video class="video compare_video" src="./video/test4.mp4" controls></video>
+				</div>
+				
 			</div>
-			<div class="video_box user_video_box">
-				<div class="user_button">
+			<div class="video_box user_box">
+				<div class="user_button_box">
 					<button id = "live_button">실시간</button>
 					<button id = "video_button">영상 선택</button>
 					<input id="input_video_button" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
 				</div>
+				<div class= "user_video_box">
+					<button class = "user_video_back">뒤로가기</button>
+					<video class="video user_video" src="./video/test4.mp4" controls></video>
+				</div>
 				
-				<video class="video user_video" src="./video/test4.mp4" controls></video>
 			</div>
 		</div>
 	</section>

@@ -1,28 +1,32 @@
 
 var user_video = document.getElementsByClassName('user_video')[0];
+const user_video_box = document.getElementsByClassName('user_video_box')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const canvasCtx = canvasElement.getContext('2d');
 
-const user_button = document.getElementsByClassName('user_button')[0];
+const user_button_box = document.getElementsByClassName('user_button_box')[0];
 const input_video_button = document.getElementById("input_video_button");
 const video_button = document.getElementById("video_button");
 const live_button = document.getElementById("live_button");
+const user_video_back = document.getElementsByClassName('user_video_back')[0];
 
+// 비디오 버튼 클릭 이벤트
 video_button.addEventListener("click", function() {
 	input_video_button.click();
 });
 
+// 파일 입력시 이벤트
 input_video_button.addEventListener("change", function() {
 	const file = input_video_button.files[0];
 	const videoUrl = URL.createObjectURL(file);
 	user_video.pause();
 	user_video.setAttribute("src", videoUrl);
-	user_video.style.display = "block";
-	user_button.style.display = "none";
+	user_video_box.style.display = "block";
+	user_button_box.style.display = "none";
 	poseStart();
 });
 
-
+// 실시간 버튼 클릭 이벤트
 live_button.addEventListener("click", function(){
 	const camera = new Camera(user_video, {
 		onFrame: async () => {
@@ -33,12 +37,19 @@ live_button.addEventListener("click", function(){
 	});
 	camera.start();
 	
-	user_video.style.display = "block";
-	user_button.style.display = "none";
+	user_video_box.style.display = "block";
+	user_button_box.style.display = "none";
 	
 });
 
-
+// 뒤로가기 버튼
+user_video_back.addEventListener("click",function(){
+	user_video.pause();
+	user_video.setAttribute("src", " ");
+	input_video_button.value = "";
+	user_video_box.style.display = "none";
+	user_button_box.style.display = "flex";
+})
 
 
 // pose 모델 load
