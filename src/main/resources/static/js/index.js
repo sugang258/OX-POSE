@@ -112,10 +112,18 @@ live_button.addEventListener("click", function(){
 		width: 1280,
 		height: 720
 	});
+
+	canvasElement.width = 1280/2;
+	canvasElement.height = 720/2;
+	
+	pose.onResults(onPose);
+	
 	camera.start();
 	
 	user_video_box.style.display = "block";
 	user_button_box.style.display = "none";
+
+
 	
 });
 
