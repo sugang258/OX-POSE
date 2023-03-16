@@ -33,16 +33,15 @@
 	width: 90%;
 	aspect-ratio: 9/16;
 	}
-.user_button_box{
+.user_button_box, .compare_button_box{
 	display : flex;
 	justify-content : center;
 	align-items : center;
 	width: 100%;
 	height: 100%;
 	
-/* 	display: none; */
 }
-.user_video_box{
+.user_video_box,.compare_video_box{
 	display: none;
 }
 #user_input_video, #compare_input_video{
@@ -74,14 +73,16 @@
 	<section class = "body_section" >
 		<div class="container">
 			
-			<div class="video_box compare_video_box">
+			<div class="video_box compare_box">
 				<div class = "compare_button_box">
 					<button id = "compare_video_btn">비교 영상 직접 선택</button>
 					<input id="compare_input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
 					<button>샘플 영상 선택</button>
 				</div>
-				<div>
-					<video class="video compare_video" src="./video/test4.mp4" controls></video>
+				<div  class= "compare_video_box">
+<!-- 					<video class="video compare_video" src="./video/test4.mp4" controls></video> -->
+					<button class = "compare_video_back">뒤로가기</button>
+					<!-- 사용자 영상 Video 태그 부분 -->
 				</div>
 				
 			</div>
