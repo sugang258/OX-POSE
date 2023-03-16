@@ -19,7 +19,6 @@ const compare_button_box = document.getElementsByClassName('compare_button_box')
 const compare_video_btn = document.getElementById("compare_video_btn");
 const compare_input_video = document.getElementById("compare_input_video");
 const compare_video_back = document.getElementsByClassName('compare_video_back')[0];
-const compare_video = document.getElementsByClassName("compare_video")[0];
 
 const compare_canvas = document.getElementsByClassName("compare_canvas")[0];
 const compare_canvasCtx = compare_canvas.getContext('2d');
@@ -71,7 +70,8 @@ compare_input_video.addEventListener("change", function() {
 	compare_video_box.style.display = "block";
 	compare_button_box.style.display = "none";
 	
-//	poseStart();
+	ComparePoseStart();
+	ComparePose.onResults(onComparePose);
 });
 
 
@@ -164,8 +164,22 @@ pose.setOptions({
 		minTrackingConfidence: 0.5,
 		maxNumDetection : 3
 });
-ComparePoseStart();
-pose.onResults(onComparePose);
+
+//비교영상 pose 모델 load
+var ComparePose = new Pose({
+	locateFile: (file) => {
+		return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+	}
+});
+ComparePose.setOptions({
+		upperBodyOnly: true,
+		modelComplexity: 1,
+		smoothLandmarks: true,
+		enableSegmentation: false,
+		minDetectionConfidence: 0.5,
+		minTrackingConfidence: 0.5,
+		maxNumDetection : 3
+});
 
 //mediapipe pose 모델 초기화, 세팅 후 시작
 function poseStart() {
@@ -183,7 +197,7 @@ function poseStart() {
 
 //비교영상 mediapipe pose 모델 초기화, 세팅 후 시작
 function ComparePoseStart() {
-	pose.reset();
+	ComparePose.reset();
 	compare_video.load();
 	compare_video.addEventListener("playing", processCompareVideo);
 
@@ -208,8 +222,8 @@ function processVideo() {
 
 // 비교 영상 비디오 프레임 처리 및 랜드마크 그리기
 function processCompareVideo() {
-	pose.send({image : compare_video });
-	canvasCtx.drawImage(compare_video, 0, 0, compare_canvas.width, compare_canvas.height);
+	ComparePose.send({image : compare_video });
+	compare_canvasCtx.drawImage(compare_video, 0, 0, compare_canvas.width, compare_canvas.height);
 
 	if(compare_video.paused) {
 		return;
