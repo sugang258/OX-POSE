@@ -1,10 +1,12 @@
 
 
-let user_video;
-const user_video_box = document.getElementsByClassName('user_video_box')[0];
+
+
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const canvasCtx = canvasElement.getContext('2d');
 
+
+const user_video_box = document.getElementsByClassName('user_video_box')[0];
 const user_button_box = document.getElementsByClassName('user_button_box')[0];
 const user_input_video = document.getElementById("user_input_video");
 const user_video_btn = document.getElementById("user_video_btn");
@@ -12,9 +14,11 @@ const live_button = document.getElementById("live_button");
 const user_video_back = document.getElementsByClassName('user_video_back')[0];
 
 // 비교 영상 부분
+const compare_video_box = document.getElementsByClassName('compare_video_box')[0];
+const compare_button_box = document.getElementsByClassName('compare_button_box')[0];
 const compare_video_btn = document.getElementById("compare_video_btn");
 const compare_input_video = document.getElementById("compare_input_video");
-
+const compare_video_back = document.getElementsByClassName('compare_video_back')[0];
 
 const leftIndices = [1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31];
 const rightIndices = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
@@ -33,6 +37,8 @@ const centerConnections = [
 
 
 let camera;
+let user_video,compare_video;
+
 
 compare_video_btn.addEventListener("click", function() {
 	compare_input_video.click();
@@ -44,13 +50,27 @@ user_video_btn.addEventListener("click", function() {
 });
 
 
+compare_input_video.addEventListener("change", function() {
+	const file = compare_input_video.files[0];
+	const videoUrl = URL.createObjectURL(file);
+	
+	compare_video = createVideoElement(compare_video_box);
+	
+	compare_video.pause();
+	compare_video.setAttribute("src", videoUrl);
+	compare_video_box.style.display = "block";
+	compare_button_box.style.display = "none";
+	
+//	poseStart();
+});
 
-// 파일 입력시 이벤트
+
+// User 파일 입력시 이벤트
 user_input_video.addEventListener("change", function() {
 	const file = user_input_video.files[0];
 	const videoUrl = URL.createObjectURL(file);
 	
-	createVideoElement();
+	user_video = createVideoElement(user_video_box);
 	
 	user_video.pause();
 	user_video.setAttribute("src", videoUrl);
@@ -60,10 +80,19 @@ user_input_video.addEventListener("change", function() {
 	poseStart();
 });
 
-// 실시간 버튼 클릭 이벤트
+
+function createVideoElement(video_box){
+	video = document.createElement("video");
+	video.className = "video";
+	video.setAttribute("controls","controls");
+	video_box.appendChild(video);
+	return video;
+}
+
+// User 실시간 버튼 클릭 이벤트
 live_button.addEventListener("click", function(){
 	pose.reset();
-	createVideoElement();
+	user_video = createVideoElement(user_video_box);
 	
 	camera = new Camera(user_video, {
 		onFrame: async () => {
@@ -96,13 +125,17 @@ user_video_back.addEventListener("click",function(){
 	user_video.remove();
 })
 
+compare_video_back.addEventListener("click",function(){
+	compare_video.pause();
+	
+	compare_video.setAttribute("src", " ");
+	compare_input_video.value = "";
+	compare_video_box.style.display = "none";
+	compare_button_box.style.display = "flex";
+	
+	compare_video.remove();
+})
 
-function createVideoElement(){
-	user_video = document.createElement("video");
-	user_video.className = "video";
-	user_video.setAttribute("controls","controls");
-	user_video_box.appendChild(user_video);
-}
 
 
 
