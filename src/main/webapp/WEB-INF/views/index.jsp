@@ -101,6 +101,7 @@
 	</section>
 
 	<hr>
+	<canvas class="compare_canvas"></canvas>
 	<canvas class="output_canvas"></canvas>
 
 
