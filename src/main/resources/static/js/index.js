@@ -1,16 +1,19 @@
 
 
 let user_video;
-//var user_video = document.getElementsByClassName('user_video')[0];
 const user_video_box = document.getElementsByClassName('user_video_box')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const canvasCtx = canvasElement.getContext('2d');
 
 const user_button_box = document.getElementsByClassName('user_button_box')[0];
-const input_video_button = document.getElementById("input_video_button");
-const video_button = document.getElementById("video_button");
+const user_input_video = document.getElementById("user_input_video");
+const user_video_btn = document.getElementById("user_video_btn");
 const live_button = document.getElementById("live_button");
 const user_video_back = document.getElementsByClassName('user_video_back')[0];
+
+// 비교 영상 부분
+const compare_video_btn = document.getElementById("compare_video_btn");
+const compare_input_video = document.getElementById("compare_input_video");
 
 
 const leftIndices = [1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31];
@@ -31,16 +34,20 @@ const centerConnections = [
 
 let camera;
 
-
-
-// 비디오 버튼 클릭 이벤트
-video_button.addEventListener("click", function() {
-	input_video_button.click();
+compare_video_btn.addEventListener("click", function() {
+	compare_input_video.click();
 });
 
+// 비디오 버튼 클릭 이벤트
+user_video_btn.addEventListener("click", function() {
+	user_input_video.click();
+});
+
+
+
 // 파일 입력시 이벤트
-input_video_button.addEventListener("change", function() {
-	const file = input_video_button.files[0];
+user_input_video.addEventListener("change", function() {
+	const file = user_input_video.files[0];
 	const videoUrl = URL.createObjectURL(file);
 	
 	createVideoElement();
@@ -82,7 +89,7 @@ user_video_back.addEventListener("click",function(){
 		camera.stop();
 	}
 	user_video.setAttribute("src", " ");
-	input_video_button.value = "";
+	user_input_video.value = "";
 	user_video_box.style.display = "none";
 	user_button_box.style.display = "flex";
 	
@@ -91,12 +98,10 @@ user_video_back.addEventListener("click",function(){
 
 
 function createVideoElement(){
-	
 	user_video = document.createElement("video");
 	user_video.className = "video";
 	user_video.setAttribute("controls","controls");
 	user_video_box.appendChild(user_video);
-
 }
 
 

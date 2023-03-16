@@ -45,7 +45,7 @@
 .user_video_box{
 	display: none;
 }
-#input_video_button{
+#user_input_video, #compare_input_video{
 	display: none;
 }
 	
@@ -75,8 +75,9 @@
 		<div class="container">
 			
 			<div class="video_box compare_video_box">
-				<div>
-					<button>비교 영상 직접 선택</button>
+				<div class = "compare_button_box">
+					<button id = "compare_video_btn">비교 영상 직접 선택</button>
+					<input id="compare_input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
 					<button>샘플 영상 선택</button>
 				</div>
 				<div>
@@ -87,8 +88,8 @@
 			<div class="video_box user_box">
 				<div class="user_button_box">
 					<button id = "live_button">실시간</button>
-					<button id = "video_button">영상 선택</button>
-					<input id="input_video_button" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
+					<button id = "user_video_btn">영상 선택</button>
+					<input id="user_input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
 				</div>
 				<div class= "user_video_box">
 					<button class = "user_video_back">뒤로가기</button>
