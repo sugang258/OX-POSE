@@ -20,6 +20,10 @@ const compare_video_btn = document.getElementById("compare_video_btn");
 const compare_input_video = document.getElementById("compare_input_video");
 const compare_video_back = document.getElementsByClassName('compare_video_back')[0];
 
+const compare_canvas = document.getElementsByClassName("compare_canvas")[0];
+const compare_canvasCtx = compare_canvas.getContext('2d');
+
+
 const leftIndices = [1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31];
 const rightIndices = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
 const leftConnections = [
@@ -40,9 +44,14 @@ let camera;
 let user_video,compare_video;
 
 
+
 compare_video_btn.addEventListener("click", function() {
 	compare_input_video.click();
 });
+
+
+
+
 
 // 비디오 버튼 클릭 이벤트
 user_video_btn.addEventListener("click", function() {
@@ -61,7 +70,8 @@ compare_input_video.addEventListener("change", function() {
 	compare_video_box.style.display = "block";
 	compare_button_box.style.display = "none";
 	
-//	poseStart();
+	ComparePoseStart();
+	ComparePose.onResults(onComparePose);
 });
 
 
@@ -78,6 +88,7 @@ user_input_video.addEventListener("change", function() {
 	user_button_box.style.display = "none";
 	
 	poseStart();
+	pose.onResults(onPose);
 });
 
 
@@ -138,9 +149,6 @@ compare_video_back.addEventListener("click",function(){
 
 
 
-
-
-
 // pose 모델 load
 var pose = new Pose({
 	locateFile: (file) => {
@@ -156,8 +164,22 @@ pose.setOptions({
 		minTrackingConfidence: 0.5,
 		maxNumDetection : 3
 });
-pose.onResults(onPose);
 
+//비교영상 pose 모델 load
+var ComparePose = new Pose({
+	locateFile: (file) => {
+		return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+	}
+});
+ComparePose.setOptions({
+		upperBodyOnly: true,
+		modelComplexity: 1,
+		smoothLandmarks: true,
+		enableSegmentation: false,
+		minDetectionConfidence: 0.5,
+		minTrackingConfidence: 0.5,
+		maxNumDetection : 3
+});
 
 //mediapipe pose 모델 초기화, 세팅 후 시작
 function poseStart() {
@@ -173,6 +195,20 @@ function poseStart() {
 	};
 }
 
+//비교영상 mediapipe pose 모델 초기화, 세팅 후 시작
+function ComparePoseStart() {
+	ComparePose.reset();
+	compare_video.load();
+	compare_video.addEventListener("playing", processCompareVideo);
+
+	compare_video.onloadedmetadata = () => {
+		compare_canvas.width = compare_video.videoWidth;
+		compare_canvas.height = compare_video.videoHeight;
+
+		processCompareVideo();
+	}
+}
+
 // 비디오 프레임 처리 및 랜드마크 그리기
 function processVideo() {
 	pose.send({ image: user_video });
@@ -184,10 +220,22 @@ function processVideo() {
 	requestAnimationFrame(processVideo,customConfig);
 }
 
+// 비교 영상 비디오 프레임 처리 및 랜드마크 그리기
+function processCompareVideo() {
+	ComparePose.send({image : compare_video });
+	compare_canvasCtx.drawImage(compare_video, 0, 0, compare_canvas.width, compare_canvas.height);
+
+	if(compare_video.paused) {
+		return;
+	}
+	requestAnimationFrame(processCompareVideo, customConfig);
+}
+
 const customConfig = {
 	  maxFPS: 30,
 	  skipFrames: 2
 };
+
 
 
 
@@ -234,3 +282,65 @@ function onPose(results) {
 		canvasCtx.restore();
 	}
 }
+
+// MediaPipe Pose 결과를 이용하여 랜드마크 그리기
+function onComparePose(results) {
+	console.log(results);
+	
+	const keyPoint = results.poseLandmarks;
+
+	var jsonData = JSON.stringify(keyPoint);
+
+	console.log(jsonData);
+
+	$.ajax({
+		type :'POST',
+		url :'ComparePosePrint',
+		contentType:'application/json',
+		processData : false,
+		dataType : 'json',
+		data : jsonData,
+		success : function(data) {
+			console.log('전송완료');
+		}
+	})
+
+	let leftKeyPoint = [];
+	let rightKeyPoint = [];
+	if (keyPoint != null) {
+
+		compare_canvasCtx.save();
+		compare_canvasCtx.clearRect(0, 0, compare_canvas.width, compare_canvas.height);
+		compare_canvasCtx.drawImage(results.image, 0, 0, compare_canvas.width, compare_canvas.height);
+		
+		for (let i = 0; i < keyPoint.length; i++) {
+			if (leftIndices.includes(i)) {
+				leftKeyPoint.push(keyPoint[i]);
+			} else {
+				rightKeyPoint.push(keyPoint[i]);
+			}
+		}
+
+		drawLandmarks(compare_canvasCtx, leftKeyPoint, {
+			color: '#FF0000', lineWidth: 2
+		});
+		drawLandmarks(compare_canvasCtx, rightKeyPoint, {
+			color: '#0000FF', lineWidth: 2
+		});
+		drawConnectors(compare_canvasCtx, keyPoint, leftConnections,
+			{
+				color: '#00FFFF', lineWidth: 3
+			});
+		drawConnectors(compare_canvasCtx, keyPoint, rightConnections,
+			{
+				color: '#00FF00', lineWidth: 3
+			});
+		drawConnectors(compare_canvasCtx, keyPoint, centerConnections,
+		{
+			color: '#EEEEEE', lineWidth: 3
+		});
+
+		compare_canvasCtx.restore();
+	}
+}
+

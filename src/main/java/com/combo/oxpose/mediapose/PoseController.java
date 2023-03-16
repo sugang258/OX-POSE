@@ -41,7 +41,7 @@ public class PoseController {
 		return "mediapipe_multiVideo";
 	}
 	
-	@PostMapping("poseprint")
+	@PostMapping("ComparePosePrint")
 	public void posePrint(@RequestBody List<Map<String, Object>> data, Model model) {
 //		System.out.println(data);
 //		model.addAttribute("print", poseService.posePrint(jsonObject));
