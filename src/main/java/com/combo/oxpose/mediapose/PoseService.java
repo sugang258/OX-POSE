@@ -34,9 +34,7 @@ public class PoseService {
 		}
 		num++;
 		result.add(list);
-		double[] ar = CalVector(12,11);
-		double[] ar2 = CalVector(12, 14);
-		cos(ar, ar2);
+		cos(CalVector(12,11), CalVector(12,14));
 		log.info("result :    " + result.size());
 		log.info("result :     " + result);
 
@@ -83,10 +81,6 @@ public class PoseService {
 			vector[1] = y2 - y1;
 			vector[2] = z2 - z1;
 			
-			System.out.println(one);
-			System.out.println(vector[0]);
-			System.out.println(vector[1]);
-			System.out.println(vector[2]);
 		}
 		return vector;
 		
@@ -99,13 +93,11 @@ public class PoseService {
 		double deno2 = Math.sqrt(Math.pow(b[0], 2) + Math.pow(b[1], 2) + Math.pow(b[2], 2));
 		
 		double deno = deno1 * deno2;
-		System.out.println("numer :   " + numer);
-		System.out.println("deno :    " + deno);
-		System.out.println(numer/deno);
 		double ceta = Math.acos(numer/deno);
 		
-		System.out.println("ceta :     " +ceta);
-			
+		System.out.println("ceta :    "+ceta*100);
+		
+					
 	}
 
 }
