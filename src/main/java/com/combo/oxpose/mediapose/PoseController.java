@@ -1,5 +1,6 @@
 package com.combo.oxpose.mediapose;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,12 +15,28 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class PoseController {
 	
 	@Autowired
 	private PoseService poseService;
+	
+	@GetMapping("/")
+	public ModelAndView Home() {
+		
+		ModelAndView mv = new ModelAndView();
+		ArrayList<String> fileNames = poseService.getFileNum();
+		
+		mv.addObject("fileNames", fileNames);
+		mv.setViewName("index");
+		
+		
+		return mv;
+	}
+	
+	
 	
 	@GetMapping("/live")
 	public String live() {
@@ -41,10 +58,12 @@ public class PoseController {
 		return "mediapipe_multiVideo";
 	}
 	
-	@PostMapping("ComparePosePrint")
+	@ResponseBody
+	@PostMapping("/comparePosePrint")
 	public void posePrint(@RequestBody List<Map<String, Object>> data, Model model) {
-//		System.out.println(data);
+		System.out.println(data);
 //		model.addAttribute("print", poseService.posePrint(jsonObject));
+		
 		poseService.posePrint(data);
 	}
 
