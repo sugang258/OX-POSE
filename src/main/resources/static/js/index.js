@@ -299,23 +299,22 @@ function onComparePose(results) {
 
 	var jsonData = JSON.stringify(keyPoint);
 
-	console.log(jsonData);
-
-	$.ajax({
-		type :'POST',
-		url :'ComparePosePrint',
-		contentType:'application/json',
-		processData : false,
-		dataType : 'json',
-		data : jsonData,
-		success : function(data) {
-			console.log('전송완료');
-		}
-	})
-
 	let leftKeyPoint = [];
 	let rightKeyPoint = [];
+	
 	if (keyPoint != null) {
+
+		$.ajax({
+			type :'POST',
+			url :'ComparePosePrint',
+			contentType:'application/json',
+			processData : false,
+			dataType : 'json',
+			data : jsonData,
+			success : function(data) {
+				console.log('전송완료');
+			}
+		})
 
 		compare_canvasCtx.save();
 		compare_canvasCtx.clearRect(0, 0, compare_canvas.width, compare_canvas.height);
