@@ -9,6 +9,7 @@ public class PoseVO {
 	private Integer point;
 	private double x;
 	private double y;
+	private double z;
 	private double visibility;
 	
 }
