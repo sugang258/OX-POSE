@@ -76,7 +76,7 @@
 	  height: 600px;
 	
 	  padding: 40px;
-		z-index: 2;
+	  z-index: 2;
 	  text-align: center;
 	
 	  background-color: rgb(255, 255, 255);
@@ -84,6 +84,7 @@
 	  box-shadow: 0 2px 3px 0 rgba(34, 36, 38, 0.15);
 	
 	  transform: translateX(-50%) translateY(-50%);
+	  overflow: scroll;
 	}
 	.modal_background {
             position: absolute;
@@ -102,6 +103,24 @@
             top: 10px;
             right: 10px;
         }
+        
+    .modal_video_box{
+    	height: 20%; 
+    	background-color: aqua; 
+    	display: flex;
+    	margin: 2%;
+    }
+    .modal_video_thum{
+    	background-color: black; 
+    	width: 40%; 
+    	margin: 2%;
+    }
+    .modal_video_info{
+    	margin: 2%;
+    }
+     
+        
+        
 }
 </style>
 <!-- boot strap -->
@@ -167,14 +186,14 @@
 	<div class="modal_background"></div>
 	<div class="modal">
       <div class="modal_body">
-      	<div class="modal_close">X</div>
+      		<div class="modal_close">X</div>
       		<div>샘플 영상 선택</div>
       		<hr>
-      		 <div style = "height: 20%; background-color: aqua; display: flex;">
-      		 		<div style="background-color: black; width: 40%; margin: 2%;"></div>
-      		 		<div style="margin: 2%;">
-      		 			<div>title</div>
-      		 			<div>contents</div>
+      		 <div class = "modal_video_box">
+      		 		<div class = "modal_video_thum"></div>
+      		 		<div class = "modal_video_info">
+      		 			<div class = "modal_video_title">title</div>
+      		 			<div class = "modal_video_contents">contents</div>
       		 		</div>
       		 </div>
       		 
@@ -188,6 +207,7 @@
 	<script>
       const modal = document.querySelector('.modal');
       const modal_background = document.querySelector('.modal_background')
+      const modal_body = document.querySelector(".modal_body");
       
       document.querySelector('.modal_btn').addEventListener('click', () => {
     	  open();
@@ -206,13 +226,43 @@
    	  	modal.classList.remove('show-modal');
         modal_background.classList.remove('show-modal');
         document.body.style.overflow = 'auto';
-       }
-		function open(){
+       };
+	  function open(){
 			
   		modal.classList.add('show-modal');
         modal_background.classList.add('show-modal');
         document.body.style.overflow = 'hidden';
-       }
+       };
+	  
+		
+       
+		
+//     	   var div = document.createElement("div");
+//     	   var div2 = document.createElement("div");
+//     	   var div3 = document.createElement("div");
+//     	   var div4 = document.createElement("div");
+//     	   var div5 = document.createElement("div");
+
+    	   
+			
+//     	   div.className = "modal_video_box";
+//     	   div2.className = "modal_video_thum";
+//     	   div3.className = "modal_video_info";
+//     	   div4.className = "modal_video_title";
+//     	   div4.innerHTML = "1";
+    	   
+//     	   div5.className = "modal_video_contents";
+
+//     	   modal_body.append(div);
+//     	   div.append(div2);
+//     	   div.append(div3);
+//     	   div3.append(div4);
+//     	   div3.append(div5);
+    	   
+
+       
+       
+	 
 	</script>
 </body>
 </html>

@@ -37,8 +37,8 @@ public class PoseService {
 		num++;
 		result.add(list);
 		cos(CalVector(12,11), CalVector(12,14));
-		log.info("result :    " + result.size());
-		log.info("result :     " + result);
+//		log.info("result :    " + result.size());
+//		log.info("result :     " + result);
 
 		return;
 	}
@@ -120,14 +120,16 @@ public class PoseService {
 		
 		ArrayList<String> fileNames = new ArrayList<>();
 		
+		
+		
 		int fileCnt = 0;		
 		int dirCnt = 0;
-		log.info("files :  " + files);
+//		log.info("files :  " + files);
 		for (int i = 0; i < files.length; i++) {
 			File file = files[i];
 			fileNames.add(file.getName());
 			
-			log.info("file :  " + file);
+//			log.info("file :  " + file);
 			if (file.isFile()) {
 				fileCnt++;// 파일 개수 				
 				//System.out.println("[File]" + file.getCanonicalPath().toString());				

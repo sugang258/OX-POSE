@@ -306,7 +306,7 @@ function onComparePose(results) {
 
 		$.ajax({
 			type :'POST',
-			url :'ComparePosePrint',
+			url :'comparePosePrint',
 			contentType:'application/json',
 			processData : false,
 			dataType : 'json',
