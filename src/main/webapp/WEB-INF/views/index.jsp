@@ -12,6 +12,7 @@
 		display: flex;
 		justify-content: center;
 		max-height: 80%;
+		min-height: 300px;
 		width: 100%;
 	}
 	
@@ -25,6 +26,7 @@
 	
 	.video_box {
 		margin : 0 3%;
+		height: 100%;
 		width : 100%;
 	}
 	
@@ -145,6 +147,12 @@
 		<a href="./multiVideo">tensorFlow 영상 test</a>
 	</div>
 
+	<div>
+	  <input id="video_ratio" type="range" min="0.5" max="1.6" step="any">
+	  <label for="volume">영상 비율</label>
+	</div>
+
+
 	<hr>
 	<section class = "body_section" >
 		<div class="container">
@@ -203,7 +211,6 @@
 
  	<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
 	<script type="text/javascript" src="/js/index.js"></script>
-	<script type="text/javascript" src="/js/index_modal.js"></script>
 	<script>
       const modal = document.querySelector('.modal');
       const modal_background = document.querySelector('.modal_background')

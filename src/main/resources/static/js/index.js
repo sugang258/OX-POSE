@@ -23,6 +23,7 @@ const compare_video_back = document.getElementsByClassName('compare_video_back')
 const compare_canvas = document.getElementsByClassName("compare_canvas")[0];
 const compare_canvasCtx = compare_canvas.getContext('2d');
 
+const video_ratio = document.getElementById("video_ratio");
 
 const leftIndices = [1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31];
 const rightIndices = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
@@ -45,11 +46,21 @@ let user_video,compare_video;
 
 
 
+video_ratio.addEventListener("change",function(){
+	const video = document.getElementsByClassName("video");
+	
+	for(let i = 0 ; i < video.length; i ++){
+		
+		
+		let newWidth = video[0].videoWidth * video_ratio.value;
+		video[i].style.height = newWidth + "px";
+	}
+	
+});
+
 compare_video_btn.addEventListener("click", function() {
 	compare_input_video.click();
 });
-
-
 
 
 
