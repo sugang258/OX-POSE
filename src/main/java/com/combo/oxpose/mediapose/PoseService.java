@@ -14,13 +14,13 @@ import lombok.extern.java.Log;
 public class PoseService {
 
 	private List<List<PoseVO>> result = new ArrayList<>();
-	private List<PoseVO> list = new ArrayList<>();
 
 	private int num = 1;
 
 	public void posePrint(List<Map<String, Object>> data) {
 
-		list = new ArrayList<>();
+		List<PoseVO> list = new ArrayList<>();
+		
 		for (int i = 0; i < data.size(); i++) {
 			PoseVO poseVO = new PoseVO();
 			poseVO.setNum(num);
@@ -34,13 +34,13 @@ public class PoseService {
 		}
 		num++;
 		result.add(list);
-		result();
-		log.info("result :    " + result.size());
+		result(12, 11, 14);
+//		log.info("result :    " + result.size());
 		
 		return;
 	}
 
-	public void result() {
+	public void result(int i, int j, int k) {
 
 		double[] vector1 = new double[3];
 		double[] vector2 = new double[3];
@@ -54,8 +54,8 @@ public class PoseService {
 //		}
 
 		// 추가되는 좌표 (마지막 거)
-		vector1 = calVector(12, 11, result.get(result.size() - 1));
-		vector2 = calVector(12, 14, result.get(result.size() - 1));
+		vector1 = calVector(i, j, result.get(result.size() - 1)); //i-j
+		vector2 = calVector(i, k, result.get(result.size() - 1)); //j-k
 
 		System.out.println(calCeta(vector1, vector2) * 100);
 	}
@@ -72,31 +72,31 @@ public class PoseService {
 
 	}
 
-	public double[] calVector(int a, int b, List<PoseVO> one) {
+	public double[] calVector(int point1, int point2, List<PoseVO> pose) {
 
 		double[] vector = new double[3];
 		double x1 = 0, y1 = 0, z1 = 0;
 		double x2 = 0, y2 = 0, z2 = 0;
 		double unit = 0;
 
-		for (int i = 0; i < one.size(); i++) {
+		for (int i = 0; i < pose.size(); i++) {
 
 			vector = new double[3];
 
-			if (one.get(i).getPoint() == a) {
-				PoseVO poseVO1 = one.get(i);
+			if (pose.get(i).getPoint() == point1) {
+				PoseVO poseVO1 = pose.get(i);
 				unit = vectorSize(poseVO1);
 				x1 = unitVector(poseVO1.getX(), unit);
 				y1 = unitVector(poseVO1.getY(), unit);
 				z1 = unitVector(poseVO1.getZ(), unit);
 			}
 
-			if (one.get(i).getPoint() == b) {
-				PoseVO poseVO2 = one.get(i);
+			if (pose.get(i).getPoint() == point2) {
+				PoseVO poseVO2 = pose.get(i);
 				unit = vectorSize(poseVO2);
-				x2 = Math.abs(poseVO2.getX() / unit);
-				y2 = Math.abs(poseVO2.getY() / unit);
-				z2 = Math.abs(poseVO2.getZ() / unit);
+				x2 = unitVector(poseVO2.getX(), unit);
+				y2 = unitVector(poseVO2.getY(), unit);
+				z2 = unitVector(poseVO2.getZ(), unit);
 			}
 		}
 
@@ -111,8 +111,8 @@ public class PoseService {
 		return Math.sqrt(Math.pow(poseVO.getX(), 2) + Math.pow(poseVO.getY(), 2) + Math.pow(poseVO.getZ(), 2));
 	}
 
-	public double unitVector(double coordinate, double unit) {
-		return Math.abs(coordinate / unit);
+	public double unitVector(double point, double unit) {
+		return Math.abs(point / unit);
 	}
 
 	public ArrayList<String> getFileNum() {
