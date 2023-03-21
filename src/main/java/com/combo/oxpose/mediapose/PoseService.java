@@ -37,7 +37,7 @@ public class PoseService {
 		result.add(list);
 		result();
 //		log.info("result :    " + result.size());
-		
+
 		return;
 	}
 
@@ -54,15 +54,23 @@ public class PoseService {
 //			System.out.println(calCeta(vector1, vector2)*100);
 //		}
 
-		// 추가되는 좌표 (마지막 거)
-		vector1 = calVector(26, 24, result.get(result.size() - 1));
-		vector2 = calVector(26, 28, result.get(result.size() - 1));
-//		System.out.println("vec1 "+Arrays.toString(vector1));
-//		System.out.println("vec1 "+Arrays.toString(vector2));
-		System.out.println("각도 "+calCeta(vector1, vector2)*180/Math.PI);
+		// 추가되는 좌표 (마지막 거) 
+		// 왼쪽 어꺠 - 오른쪽 어깨 - 오른쪽 팔꿈치
+//		vector1 = calVector(12, 11, result.get(result.size() - 1));
+//		vector2 = calVector(12, 14, result.get(result.size() - 1));
+		
+		// 오른쪽 무릎
+//		vector1 = calVector(26, 24, result.get(result.size() - 1));
+//		vector2 = calVector(26, 28, result.get(result.size() - 1));
+
+		// 오른쪽 팔꿈치
+		vector1 = calVector(14, 12, result.get(result.size() - 1));
+		vector2 = calVector(14, 16, result.get(result.size() - 1));
+		
+		System.out.println("각도 " + calCeta(vector1, vector2) * 180 / Math.PI);
 	}
 
-	//결과 단위 : 라디안
+	// 결과 단위 : 라디안
 	// 라디안 x 180 / 파이 = 도
 	public double calCeta(double[] a, double[] b) {
 
@@ -77,7 +85,7 @@ public class PoseService {
 	}
 
 	public double[] calVector(int a, int b, List<PoseVO> one) {
-		
+
 		double[] vector = new double[3];
 		double x1 = 0, y1 = 0, z1 = 0;
 		double x2 = 0, y2 = 0, z2 = 0;
@@ -89,25 +97,21 @@ public class PoseService {
 
 			if (one.get(i).getPoint() == a) {
 				PoseVO poseVO1 = one.get(i);
-				unit = vectorSize(poseVO1);
-				x1 = unitVector(poseVO1.getX(), unit);
-				y1 = unitVector(poseVO1.getY(), unit);
-				z1 = unitVector(poseVO1.getZ(), unit);
+				x1 = poseVO1.getX();
+				y1 = poseVO1.getY();
+				z1 = poseVO1.getZ();
 			}
 
 			if (one.get(i).getPoint() == b) {
 				PoseVO poseVO2 = one.get(i);
-				unit = vectorSize(poseVO2);
-				x2 = Math.abs(poseVO2.getX() / unit);
-				y2 = Math.abs(poseVO2.getY() / unit);
-				z2 = Math.abs(poseVO2.getZ() / unit);
+				x2 = poseVO2.getX();
+				y2 = poseVO2.getY();
+				z2 = poseVO2.getZ();
 			}
 		}
-
 		vector[0] = x2 - x1;
 		vector[1] = y2 - y1;
 		vector[2] = z2 - z1;
-		
 		return vector;
 	}
 

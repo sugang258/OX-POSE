@@ -308,7 +308,7 @@ function onComparePose(results) {
 	
 	const keyPoint = results.poseLandmarks;
 
-	var jsonData = JSON.stringify(keyPoint);
+	var jsonData = JSON.stringify(results.poseWorldLandmarks);
 
 	let leftKeyPoint = [];
 	let rightKeyPoint = [];
