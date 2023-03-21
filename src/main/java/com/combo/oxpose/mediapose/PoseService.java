@@ -2,6 +2,7 @@ package com.combo.oxpose.mediapose;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -54,12 +55,15 @@ public class PoseService {
 //		}
 
 		// 추가되는 좌표 (마지막 거)
-		vector1 = calVector(12, 11, result.get(result.size() - 1));
-		vector2 = calVector(12, 14, result.get(result.size() - 1));
-
-		System.out.println(calCeta(vector1, vector2) * 100);
+		vector1 = calVector(26, 24, result.get(result.size() - 1));
+		vector2 = calVector(26, 28, result.get(result.size() - 1));
+//		System.out.println("vec1 "+Arrays.toString(vector1));
+//		System.out.println("vec1 "+Arrays.toString(vector2));
+		System.out.println("각도 "+calCeta(vector1, vector2)*180/Math.PI);
 	}
 
+	//결과 단위 : 라디안
+	// 라디안 x 180 / 파이 = 도
 	public double calCeta(double[] a, double[] b) {
 
 		double numer = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; // 분자
@@ -73,7 +77,7 @@ public class PoseService {
 	}
 
 	public double[] calVector(int a, int b, List<PoseVO> one) {
-
+		
 		double[] vector = new double[3];
 		double x1 = 0, y1 = 0, z1 = 0;
 		double x2 = 0, y2 = 0, z2 = 0;
@@ -115,6 +119,11 @@ public class PoseService {
 		return Math.abs(coordinate / unit);
 	}
 
+	
+	/**
+	 * JS 상에서 resource/static/video 의 파일 갯수를 가져다 주는 함수
+	 * 현재는 DB연결 전에 사용하려고 작성하였지만, 더는 사용하지 않는다.
+	*/
 	public ArrayList<String> getFileNum() {
 		try {
 			String path = "src/main/resources/static/video/";// System.getProperty("user.dir");
