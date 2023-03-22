@@ -19,8 +19,10 @@ public class PoseService {
 
 	private int num = 1;
 
-	public void posePrint(List<Map<String, Object>> data) {
-
+	public double posePrint(List<Map<String, Object>> data) {
+		
+		normalization(data);
+	
 		list = new ArrayList<>();
 		for (int i = 0; i < data.size(); i++) {
 			PoseVO poseVO = new PoseVO();
@@ -35,13 +37,60 @@ public class PoseService {
 		}
 		num++;
 		result.add(list);
-		result();
-//		log.info("result :    " + result.size());
 
-		return;
+		return result();
+	}
+	
+	
+	/**
+	 * 데이터를 회전 행렬을 거쳐 같은 축을 갖도록 정규화하는 함수
+	 * 좌어깨 : 11 / 우어깨 : 12
+	 * 좌엉 : 23 / 우엉 : 24
+	 */
+	public void normalization(List<Map<String, Object>> data) {
+		
+		double sholderCenterX = (Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(12).get("x").toString()))/2;
+		double sholderCenterY = (Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(12).get("y").toString()))/2;
+		double sholderCenterZ = (Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(12).get("z").toString()))/2;
+		double hipCenterX = (Double.valueOf(data.get(23).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString()))/2;
+		double hipCenterY = (Double.valueOf(data.get(23).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString()))/2;
+		double hipCenterZ = (Double.valueOf(data.get(23).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString()))/2;
+		double leftSideCenterX = (Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(23).get("x").toString()))/2;
+		double leftSideCenterY = (Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(23).get("y").toString()))/2;
+		double leftSideCenterZ = (Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(23).get("z").toString()))/2;
+		double rightSideCenterX = (Double.valueOf(data.get(12).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString()))/2;
+		double rightSideCenterY = (Double.valueOf(data.get(12).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString()))/2;
+		double rightSideCenterZ = (Double.valueOf(data.get(12).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString()))/2;
+		
+		double[] Sidevector = {leftSideCenterX - rightSideCenterX, leftSideCenterY - rightSideCenterY, leftSideCenterZ - rightSideCenterZ};
+		double[] Yvector = {hipCenterX - sholderCenterX, hipCenterY - sholderCenterY , hipCenterZ - sholderCenterZ};
+		double[] Zvector = crossProduct(Sidevector, Yvector);
+		double[] Xvector = crossProduct(Yvector, Zvector);
+		
+		double[] point = {Double.valueOf(data.get(26).get("x").toString()),Double.valueOf(data.get(26).get("y").toString()),Double.valueOf(data.get(26).get("z").toString())};
+	        // Rotate the point to the new coordinate system
+        double x_prime = Xvector[0] * (point[0]) + Yvector[0] * (point[1]) + Zvector[0] * (point[2]);
+        double y_prime = Xvector[1] * (point[0]) + Yvector[1] * (point[1]) + Zvector[1] * (point[2]);
+        double z_prime = Xvector[2] * (point[0]) + Yvector[2] * (point[1]) + Zvector[2] * (point[2]);
+
+	        // Print the new coordinates
+        System.out.println("The point "+ x_prime + ", " + y_prime + ", " + z_prime + ")");
+	}
+	
+	/**
+	 * 벡터의 외적
+	 * @return : 벡터 a, 벡터 b와 수직인 벡터
+	 */
+	public static double[] crossProduct(double[] a, double[] b) {
+	    double[] result = new double[3];
+	    result[0] = a[1] * b[2] - a[2] * b[1];
+	    result[1] = a[2] * b[0] - a[0] * b[2];
+	    result[2] = a[0] * b[1] - a[1] * b[0];
+	    return result;
 	}
 
-	public void result() {
+
+	public double result() {
 
 		double[] vector1 = new double[3];
 		double[] vector2 = new double[3];
@@ -67,7 +116,8 @@ public class PoseService {
 		vector1 = calVector(14, 12, result.get(result.size() - 1));
 		vector2 = calVector(14, 16, result.get(result.size() - 1));
 		
-		System.out.println("각도 " + calCeta(vector1, vector2) * 180 / Math.PI);
+		System.out.println("각도 " + calCeta(vector1, vector2));
+		return calCeta(vector1, vector2);
 	}
 
 	// 결과 단위 : 라디안
@@ -80,7 +130,7 @@ public class PoseService {
 
 		double deno = deno1 * deno2;
 
-		return Math.acos(numer / deno);
+		return Math.acos(numer / deno)* 180 / Math.PI;
 
 	}
 

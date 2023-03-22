@@ -60,11 +60,11 @@ public class PoseController {
 	
 	@ResponseBody
 	@PostMapping("/comparePosePrint")
-	public void posePrint(@RequestBody List<Map<String, Object>> data, Model model) {
+	public double posePrint(@RequestBody List<Map<String, Object>> data, Model model) {
 //		System.out.println(data);
 //		model.addAttribute("print", poseService.posePrint(jsonObject));
 		
-		poseService.posePrint(data);
+		return poseService.posePrint(data);
 	}
 
 }

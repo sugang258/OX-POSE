@@ -160,7 +160,7 @@
 			<div class="video_box compare_box">
 				<div class = "compare_button_box">
 					<button id = "compare_video_btn">비교 영상 직접 선택</button>
-					<input id="compare_input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
+					<input id="compare_input_video" class ="input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
 					<button class="modal_btn" >샘플 영상 선택</button>
 				</div>
 				<div  class= "compare_video_box">
@@ -174,7 +174,7 @@
 				<div class="user_button_box">
 					<button id = "live_button">실시간</button>
 					<button id = "user_video_btn">영상 선택</button>
-					<input id="user_input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
+					<input id="user_input_video" class ="input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
 				</div>
 				<div class= "user_video_box">
 					<button class = "user_video_back">뒤로가기</button>
@@ -188,8 +188,19 @@
 
 
 	<hr>
-	<canvas class="compare_canvas"></canvas>
-	<canvas class="output_canvas"></canvas>
+	<div id = "canvas_box">
+		<div>
+			<h3 class = "compare_result"></h3>
+			<canvas class="compare_canvas"></canvas>
+		</div>
+		<div>
+			<h3 class = "user_result"></h3>
+			<canvas class="output_canvas"></canvas>
+		</div>
+		
+		
+	</div>
+	
 
 	<div class="modal_background"></div>
 	<div class="modal">

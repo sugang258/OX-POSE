@@ -256,8 +256,8 @@ const customConfig = {
 };
 
 
-
-
+const user_result = document.querySelector(".user_result");
+const compare_result = document.querySelector(".compare_result");
 // MediaPipe Pose 결과를 이용하여 랜드마크 그리기
 function onPose(results) {
 	console.log(results);
@@ -265,7 +265,25 @@ function onPose(results) {
 	const keyPoint = results.poseLandmarks;
 	let leftKeyPoint = [];
 	let rightKeyPoint = [];
+	
+	
+	var jsonData = JSON.stringify(results.poseWorldLandmarks);
+
 	if (keyPoint != null) {
+
+		$.ajax({
+			type :'POST',
+			url :'comparePosePrint',
+			contentType:'application/json',
+			processData : false,
+			dataType : 'json',
+			data : jsonData,
+			success : function(data) {
+				console.log('전송완료' + data);
+				user_result.innerHTML = data;
+			}
+		})
+	
 
 		canvasCtx.save();
 		canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -324,6 +342,7 @@ function onComparePose(results) {
 			data : jsonData,
 			success : function(data) {
 				console.log('전송완료');
+				compare_result.innerHTML = data;
 			}
 		})
 
