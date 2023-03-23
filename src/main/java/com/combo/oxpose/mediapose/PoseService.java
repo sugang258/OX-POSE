@@ -21,7 +21,7 @@ public class PoseService {
 
 	public double posePrint(List<Map<String, Object>> data) {
 		
-		normalization(data);
+		newAxisNormalization(data);
 	
 		list = new ArrayList<>();
 		for (int i = 0; i < data.size(); i++) {
@@ -43,39 +43,74 @@ public class PoseService {
 	
 	
 	/**
-	 * 데이터를 회전 행렬을 거쳐 같은 축을 갖도록 정규화하는 함수
+	 * 데이터를 신체 기준의 새로운 축을 기준으로 정규화하는 함수
 	 * 좌어깨 : 11 / 우어깨 : 12
 	 * 좌엉 : 23 / 우엉 : 24
 	 */
-	public void normalization(List<Map<String, Object>> data) {
+	public void newAxisNormalization(List<Map<String, Object>> data) {
 		
-		double sholderCenterX = (Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(12).get("x").toString()))/2;
-		double sholderCenterY = (Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(12).get("y").toString()))/2;
-		double sholderCenterZ = (Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(12).get("z").toString()))/2;
-		double hipCenterX = (Double.valueOf(data.get(23).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString()))/2;
-		double hipCenterY = (Double.valueOf(data.get(23).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString()))/2;
-		double hipCenterZ = (Double.valueOf(data.get(23).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString()))/2;
-		double leftSideCenterX = (Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(23).get("x").toString()))/2;
-		double leftSideCenterY = (Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(23).get("y").toString()))/2;
-		double leftSideCenterZ = (Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(23).get("z").toString()))/2;
-		double rightSideCenterX = (Double.valueOf(data.get(12).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString()))/2;
-		double rightSideCenterY = (Double.valueOf(data.get(12).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString()))/2;
-		double rightSideCenterZ = (Double.valueOf(data.get(12).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString()))/2;
-		
-		double[] Sidevector = {leftSideCenterX - rightSideCenterX, leftSideCenterY - rightSideCenterY, leftSideCenterZ - rightSideCenterZ};
-		double[] Yvector = {hipCenterX - sholderCenterX, hipCenterY - sholderCenterY , hipCenterZ - sholderCenterZ};
-		double[] Zvector = crossProduct(Sidevector, Yvector);
-		double[] Xvector = crossProduct(Yvector, Zvector);
-		
-		double[] point = {Double.valueOf(data.get(26).get("x").toString()),Double.valueOf(data.get(26).get("y").toString()),Double.valueOf(data.get(26).get("z").toString())};
-	        // Rotate the point to the new coordinate system
-        double x_prime = Xvector[0] * (point[0]) + Yvector[0] * (point[1]) + Zvector[0] * (point[2]);
-        double y_prime = Xvector[1] * (point[0]) + Yvector[1] * (point[1]) + Zvector[1] * (point[2]);
-        double z_prime = Xvector[2] * (point[0]) + Yvector[2] * (point[1]) + Zvector[2] * (point[2]);
+		// 어깨 중앙선과 엉덩이 중앙선을 구합니다.
+		double[] shoulderCenter = {
+		    (Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(12).get("x").toString())) / 2,
+		    (Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(12).get("y").toString())) / 2,
+		    (Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(12).get("z").toString())) / 2
+		};
+		double[] hipCenter = {
+		    (Double.valueOf(data.get(23).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString())) / 2,
+		    (Double.valueOf(data.get(23).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString())) / 2,
+		    (Double.valueOf(data.get(23).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString())) / 2
+		};
 
-	        // Print the new coordinates
-        System.out.println("The point "+ x_prime + ", " + y_prime + ", " + z_prime + ")");
+		// 옆구리 중앙선을 구합니다.
+		double[] leftSideCenter = {
+		    (Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(23).get("x").toString())) / 2,
+		    (Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(23).get("y").toString())) / 2,
+		    (Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(23).get("z").toString())) / 2
+		};
+		double[] rightSideCenter = {
+		    (Double.valueOf(data.get(12).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString())) / 2,
+		    (Double.valueOf(data.get(12).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString())) / 2,
+		    (Double.valueOf(data.get(12).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString())) / 2
+		};
+
+		// 어깨 중앙선과 엉덩이 중앙선을 기준으로 하는 새로운 Y축을 계산합니다.
+		double[] yAxis = {hipCenter[0] - shoulderCenter[0], hipCenter[1] - shoulderCenter[1], hipCenter[2] - shoulderCenter[2]};
+		double yAxisLength = vectorSize(yAxis);
+		yAxis[0] /= yAxisLength;
+		yAxis[1] /= yAxisLength;
+		yAxis[2] /= yAxisLength;
+		
+		double[] leftToRight = {rightSideCenter[0] - leftSideCenter[0], rightSideCenter[1] - leftSideCenter[1], rightSideCenter[2] - leftSideCenter[2]};
+		double[] zAxis = crossProduct(leftToRight, yAxis);
+		double zAxisLength = vectorSize(zAxis);
+		zAxis[0] /= zAxisLength;
+		zAxis[1] /= zAxisLength;
+		zAxis[2] /= zAxisLength;
+		
+		double[] xAxis = crossProduct(zAxis, yAxis);
+		double xAxisLength = vectorSize(xAxis);
+		xAxis[0] /= xAxisLength;
+		xAxis[1] /= xAxisLength;
+		xAxis[2] /= xAxisLength;
+		
+		int key= 20;
+		double[] point = {Double.valueOf(data.get(key).get("x").toString()),Double.valueOf(data.get(key).get("y").toString()),Double.valueOf(data.get(key).get("z").toString())};
+		double x = dotProduct(xAxis, point);
+		double y = dotProduct(yAxis, point);
+		double z = dotProduct(zAxis, point);
+		
+		System.out.print("x = " + x);
+		System.out.print("/  y = " + y);
+		System.out.println("/  z = " + z);
+     }
+	
+	/** 
+	 * 벡터의 내적 
+	 */
+	public static double dotProduct(double[] v1, double[] v2) {
+	    return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
 	}
+	
 	
 	/**
 	 * 벡터의 외적
@@ -116,7 +151,7 @@ public class PoseService {
 		vector1 = calVector(14, 12, result.get(result.size() - 1));
 		vector2 = calVector(14, 16, result.get(result.size() - 1));
 		
-		System.out.println("각도 " + calCeta(vector1, vector2));
+//		System.out.println("각도 " + calCeta(vector1, vector2));
 		return calCeta(vector1, vector2);
 	}
 
@@ -167,6 +202,9 @@ public class PoseService {
 
 	public double vectorSize(PoseVO poseVO) {
 		return Math.sqrt(Math.pow(poseVO.getX(), 2) + Math.pow(poseVO.getY(), 2) + Math.pow(poseVO.getZ(), 2));
+	}
+	public double vectorSize(double[] vector) {
+		return Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
 	}
 
 	public double unitVector(double coordinate, double unit) {
