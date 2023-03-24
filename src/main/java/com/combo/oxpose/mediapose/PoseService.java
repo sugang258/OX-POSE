@@ -5,13 +5,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
-@Log
+@Slf4j
 public class PoseService {
 
 	private List<List<PoseVO>> result = new ArrayList<>();
@@ -22,7 +26,7 @@ public class PoseService {
 	public double posePrint(List<Map<String, Object>> data) {
 		
 		newAxisNormalization(data);
-	
+		
 		list = new ArrayList<>();
 		for (int i = 0; i < data.size(); i++) {
 			PoseVO poseVO = new PoseVO();
@@ -38,14 +42,22 @@ public class PoseService {
 		num++;
 		result.add(list);
 
-		return result();
+		getTheta(11,12,13); //좌 어깨(쇠골 -> 팔꿈치)
+		getTheta(12,11,14); //우 어깨(쇠골 -> 팔꿈치)
+		getTheta(13,11,15); //좌 팔꿈치
+		getTheta(14,12,16); //우 팔꿈치
+		getTheta(23,24,25); //좌 골반(우골반 -> 무릎)
+		getTheta(24,23,26); //우 골반(좌골반 -> 무릎)
+		getTheta(25,23,27); //좌 무릎
+		getTheta(26,24,28); //우 무릎
+		
+		return getTheta(26,24,28);
 	}
 	
 	
 	/**
 	 * 데이터를 신체 기준의 새로운 축을 기준으로 정규화하는 함수
-	 * 좌어깨 : 11 / 우어깨 : 12
-	 * 좌엉 : 23 / 우엉 : 24
+	 * 좌어깨 : 11 / 우어깨 : 12 / 좌엉 : 23 / 우엉 : 24
 	 */
 	public void newAxisNormalization(List<Map<String, Object>> data) {
 		
@@ -93,15 +105,18 @@ public class PoseService {
 		xAxis[1] /= xAxisLength;
 		xAxis[2] /= xAxisLength;
 		
-		int key= 20;
-		double[] point = {Double.valueOf(data.get(key).get("x").toString()),Double.valueOf(data.get(key).get("y").toString()),Double.valueOf(data.get(key).get("z").toString())};
-		double x = dotProduct(xAxis, point);
-		double y = dotProduct(yAxis, point);
-		double z = dotProduct(zAxis, point);
 		
-		System.out.print("x = " + x);
-		System.out.print("/  y = " + y);
-		System.out.println("/  z = " + z);
+		for(Map<String,Object> map : data) {
+			
+			double[] point = {Double.valueOf(map.get("x").toString()),Double.valueOf(map.get("y").toString()),Double.valueOf(map.get("z").toString())};
+			double x = dotProduct(xAxis, point);
+			double y = dotProduct(yAxis, point);
+			double z = dotProduct(zAxis, point);
+			
+			map.put("x",x );
+			map.put("y",y );
+			map.put("z",z );
+		}
      }
 	
 	/** 
@@ -114,61 +129,56 @@ public class PoseService {
 	
 	/**
 	 * 벡터의 외적
-	 * @return : 벡터 a, 벡터 b와 수직인 벡터
+	 * @return : 벡터 v1,v2와 수직인 벡터
 	 */
-	public static double[] crossProduct(double[] a, double[] b) {
+	public static double[] crossProduct(double[] v1, double[] v2) {
 	    double[] result = new double[3];
-	    result[0] = a[1] * b[2] - a[2] * b[1];
-	    result[1] = a[2] * b[0] - a[0] * b[2];
-	    result[2] = a[0] * b[1] - a[1] * b[0];
+	    result[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	    result[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	    result[2] = v1[0] * v2[1] - v1[1] * v2[0];
 	    return result;
 	}
-
-
-	public double result() {
+	
+	
+	
+	/**
+	 * 관절의 각도를 구하는 함수
+	 * @param pointKey : 관절 중앙
+	 * @param sideKey1 : pointKey 주위 key1
+	 * @param sideKey2 : pointKey 주위 key2
+	 * @return (pointKey -> sideKey1 , pointKey -> sideKey2) 사이 각
+	 */
+	
+	public double getTheta(int pointKey , int sideKey1 ,int sideKey2) {
 
 		double[] vector1 = new double[3];
 		double[] vector2 = new double[3];
-
-		// 전체 좌표 (하나씩 추가됨)
-//		for(int i=0;i<result.size();i++) {
-//			vector1 = calVector(12, 11,result.get(i));
-//			vector2 = calVector(12, 14,result.get(i));
-//			
-//			System.out.println(calCeta(vector1, vector2)*100);
-//		}
-
-		// 추가되는 좌표 (마지막 거) 
-		// 왼쪽 어꺠 - 오른쪽 어깨 - 오른쪽 팔꿈치
-//		vector1 = calVector(12, 11, result.get(result.size() - 1));
-//		vector2 = calVector(12, 14, result.get(result.size() - 1));
 		
-		// 오른쪽 무릎
-//		vector1 = calVector(26, 24, result.get(result.size() - 1));
-//		vector2 = calVector(26, 28, result.get(result.size() - 1));
-
-		// 오른쪽 팔꿈치
-		vector1 = calVector(14, 12, result.get(result.size() - 1));
-		vector2 = calVector(14, 16, result.get(result.size() - 1));
+		vector1 = calVector(pointKey, sideKey1, result.get(result.size() - 1));
+		vector2 = calVector(pointKey, sideKey2, result.get(result.size() - 1));
 		
-//		System.out.println("각도 " + calCeta(vector1, vector2));
-		return calCeta(vector1, vector2);
+		return calTheta(vector1, vector2);
 	}
 
-	// 결과 단위 : 라디안
-	// 라디안 x 180 / 파이 = 도
-	public double calCeta(double[] a, double[] b) {
+	/**
+	 * 두 벡터 사이의 각도를 구하는 함수
+	 * @return (degree) v1, v2 사이 각
+	 */
+	public double calTheta(double[] v1, double[] v2) {
 
-		double numer = a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; // 분자
-		double deno1 = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2));
-		double deno2 = Math.sqrt(Math.pow(b[0], 2) + Math.pow(b[1], 2) + Math.pow(b[2], 2));
+		double numer = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]; // 분자
+		double deno1 = Math.sqrt(Math.pow(v1[0], 2) + Math.pow(v1[1], 2) + Math.pow(v1[2], 2));
+		double deno2 = Math.sqrt(Math.pow(v2[0], 2) + Math.pow(v2[1], 2) + Math.pow(v2[2], 2));
 
 		double deno = deno1 * deno2;
-
+		// 라디안 x 180 / 파이 = 도
 		return Math.acos(numer / deno)* 180 / Math.PI;
-
 	}
-
+	
+	/**
+	 * 두 키 포인트 사이의 벡터를 구하는 함수
+	 * @return vector (a -> b)
+	 */
 	public double[] calVector(int a, int b, List<PoseVO> one) {
 
 		double[] vector = new double[3];
