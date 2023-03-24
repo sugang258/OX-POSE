@@ -172,7 +172,7 @@
 			</div>
 			<div class="video_box user_box">
 				<div class="user_button_box">
-					<button id = "live_button">실시간</button>
+					<button id = "user_live_button">실시간</button>
 					<button id = "user_video_btn">영상 선택</button>
 					<input id="user_input_video" class ="input_video" type="file" accept="video/mp4,video/mkv,video/x-m4,video/*">
 				</div>
