@@ -2,45 +2,44 @@ package com.combo.oxpose.mediapose;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.apache.logging.log4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class PoseService {
 
-	private List<List<PoseVO>> result = new ArrayList<>();
-	private List<PoseVO> list = new ArrayList<>();
+	private List<List<PoseVO>> allPoseData = new ArrayList<>();
+	private List<PoseVO> onePoseData = new ArrayList<>();
 
-	private int num = 1;
+	private int frame = 1;
 
-	public double posePrint(List<Map<String, Object>> data) {
+	
+	/**
+	 * 포즈의 키 포인트 데이터를 정규화, 각 관절의 각도를 구하는 함수 
+	 * @param data : 분석 결과
+	 * @return (임시)
+	 */
+	public double setAnalyzePose(List<Map<String, Object>> data) {
 		
-		newAxisNormalization(data);
+		normalizeData(data);
 		
-		list = new ArrayList<>();
-		for (int i = 0; i < data.size(); i++) {
+		onePoseData = new ArrayList<>();
+		for (int keyPoint = 0; keyPoint < data.size(); keyPoint++) {
 			PoseVO poseVO = new PoseVO();
-			poseVO.setNum(num);
-			poseVO.setPoint(i);
-			poseVO.setX(Double.valueOf(data.get(i).get("x").toString()));
-			poseVO.setY(Double.valueOf(data.get(i).get("y").toString()));
-			poseVO.setZ(Double.valueOf(data.get(i).get("z").toString()));
-			poseVO.setVisibility(Double.valueOf(data.get(i).get("visibility").toString()));
+			poseVO.setFrame(frame);
+			poseVO.setKeyPoint(keyPoint);
+			poseVO.setX(Double.valueOf(data.get(keyPoint).get("x").toString()));
+			poseVO.setY(Double.valueOf(data.get(keyPoint).get("y").toString()));
+			poseVO.setZ(Double.valueOf(data.get(keyPoint).get("z").toString()));
+			poseVO.setVisibility(Double.valueOf(data.get(keyPoint).get("visibility").toString()));
 
-			list.add(poseVO);
+			onePoseData.add(poseVO);
 		}
-		num++;
-		result.add(list);
+		frame++;
+		allPoseData.add(onePoseData);
 
 		getTheta(11,12,13); //좌 어깨(쇠골 -> 팔꿈치)
 		getTheta(12,11,14); //우 어깨(쇠골 -> 팔꿈치)
@@ -51,7 +50,7 @@ public class PoseService {
 		getTheta(25,23,27); //좌 무릎
 		getTheta(26,24,28); //우 무릎
 		
-		return getTheta(26,24,28);
+		return getTheta(26,24,28); // 임시
 	}
 	
 	
@@ -59,7 +58,7 @@ public class PoseService {
 	 * 데이터를 신체 기준의 새로운 축을 기준으로 정규화하는 함수
 	 * 좌어깨 : 11 / 우어깨 : 12 / 좌엉 : 23 / 우엉 : 24
 	 */
-	public void newAxisNormalization(List<Map<String, Object>> data) {
+	public void normalizeData(List<Map<String, Object>> data) {
 		
 		// 어깨 중앙선과 엉덩이 중앙선을 구합니다.
 		double[] shoulderCenter = {
@@ -87,40 +86,46 @@ public class PoseService {
 
 		// 어깨 중앙선과 엉덩이 중앙선을 기준으로 하는 새로운 Y축을 계산합니다.
 		double[] yAxis = {hipCenter[0] - shoulderCenter[0], hipCenter[1] - shoulderCenter[1], hipCenter[2] - shoulderCenter[2]};
-		double yAxisLength = vectorSize(yAxis);
-		yAxis[0] /= yAxisLength;
-		yAxis[1] /= yAxisLength;
-		yAxis[2] /= yAxisLength;
+		yAxis = normalize(yAxis);
 		
 		double[] leftToRight = {rightSideCenter[0] - leftSideCenter[0], rightSideCenter[1] - leftSideCenter[1], rightSideCenter[2] - leftSideCenter[2]};
 		double[] zAxis = crossProduct(leftToRight, yAxis);
-		double zAxisLength = vectorSize(zAxis);
-		zAxis[0] /= zAxisLength;
-		zAxis[1] /= zAxisLength;
-		zAxis[2] /= zAxisLength;
+		zAxis = normalize(zAxis);
 		
 		double[] xAxis = crossProduct(zAxis, yAxis);
-		double xAxisLength = vectorSize(xAxis);
-		xAxis[0] /= xAxisLength;
-		xAxis[1] /= xAxisLength;
-		xAxis[2] /= xAxisLength;
+		xAxis = normalize(xAxis);
 		
 		
-		for(Map<String,Object> map : data) {
+		for(Map<String,Object> keyPoint : data) {
 			
-			double[] point = {Double.valueOf(map.get("x").toString()),Double.valueOf(map.get("y").toString()),Double.valueOf(map.get("z").toString())};
-			double x = dotProduct(xAxis, point);
-			double y = dotProduct(yAxis, point);
-			double z = dotProduct(zAxis, point);
-			
-			map.put("x",x );
-			map.put("y",y );
-			map.put("z",z );
+			double[] point = {Double.valueOf(keyPoint.get("x").toString()),Double.valueOf(keyPoint.get("y").toString()),Double.valueOf(keyPoint.get("z").toString())};
+		
+			keyPoint.put("x",dotProduct(xAxis, point));
+			keyPoint.put("y",dotProduct(yAxis, point));
+			keyPoint.put("z",dotProduct(zAxis, point));
 		}
      }
 	
+	
+	/**
+	 * 벡터를 단위 벡터로 정규화 하는 함수
+	 * @param v
+	 * @return
+	 */
+	public double[] normalize(double[] v) {
+	    double[] unitVector = new double[3];
+	    double magnitude = vectorSize(v);
+
+	    if (magnitude > 0) {
+	        unitVector[0] = v[0] / magnitude;
+	        unitVector[1] = v[1] / magnitude;
+	        unitVector[2] = v[2] / magnitude;
+	    }
+	    return unitVector;
+	}
+	
 	/** 
-	 * 벡터의 내적 
+	 * 벡터의 내적
 	 */
 	public static double dotProduct(double[] v1, double[] v2) {
 	    return v1[0]*v2[0] + v1[1]*v2[1] + v1[2]*v2[2];
@@ -132,13 +137,12 @@ public class PoseService {
 	 * @return : 벡터 v1,v2와 수직인 벡터
 	 */
 	public static double[] crossProduct(double[] v1, double[] v2) {
-	    double[] result = new double[3];
-	    result[0] = v1[1] * v2[2] - v1[2] * v2[1];
-	    result[1] = v1[2] * v2[0] - v1[0] * v2[2];
-	    result[2] = v1[0] * v2[1] - v1[1] * v2[0];
-	    return result;
+	    double[] verticalVector = new double[3];
+	    verticalVector[0] = v1[1] * v2[2] - v1[2] * v2[1];
+	    verticalVector[1] = v1[2] * v2[0] - v1[0] * v2[2];
+	    verticalVector[2] = v1[0] * v2[1] - v1[1] * v2[0];
+	    return verticalVector;
 	}
-	
 	
 	
 	/**
@@ -148,14 +152,13 @@ public class PoseService {
 	 * @param sideKey2 : pointKey 주위 key2
 	 * @return (pointKey -> sideKey1 , pointKey -> sideKey2) 사이 각
 	 */
-	
 	public double getTheta(int pointKey , int sideKey1 ,int sideKey2) {
 
 		double[] vector1 = new double[3];
 		double[] vector2 = new double[3];
 		
-		vector1 = calVector(pointKey, sideKey1, result.get(result.size() - 1));
-		vector2 = calVector(pointKey, sideKey2, result.get(result.size() - 1));
+		vector1 = calVector(pointKey, sideKey1, allPoseData.get(allPoseData.size() - 1));
+		vector2 = calVector(pointKey, sideKey2, allPoseData.get(allPoseData.size() - 1));
 		
 		return calTheta(vector1, vector2);
 	}
@@ -166,49 +169,44 @@ public class PoseService {
 	 */
 	public double calTheta(double[] v1, double[] v2) {
 
-		double numer = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]; // 분자
-		double deno1 = Math.sqrt(Math.pow(v1[0], 2) + Math.pow(v1[1], 2) + Math.pow(v1[2], 2));
-		double deno2 = Math.sqrt(Math.pow(v2[0], 2) + Math.pow(v2[1], 2) + Math.pow(v2[2], 2));
+		double numer = dotProduct(v1,v2); // 분자
+		double deno1 = vectorSize(v1);
+		double deno2 = vectorSize(v2);
 
-		double deno = deno1 * deno2;
+		double cosTheta = numer/(deno1 * deno2);
 		// 라디안 x 180 / 파이 = 도
-		return Math.acos(numer / deno)* 180 / Math.PI;
+		return Math.acos(cosTheta)* 180 / Math.PI;
 	}
 	
 	/**
 	 * 두 키 포인트 사이의 벡터를 구하는 함수
-	 * @return vector (a -> b)
+	 * @return vector (v1 -> v2)
 	 */
-	public double[] calVector(int a, int b, List<PoseVO> one) {
+	public double[] calVector(int key1, int key2, List<PoseVO> one) {
 
 		double[] vector = new double[3];
-		double x1 = 0, y1 = 0, z1 = 0;
-		double x2 = 0, y2 = 0, z2 = 0;
-		double unit = 0;
 
-		for (int i = 0; i < one.size(); i++) {
-
-			vector = new double[3];
-
-			if (one.get(i).getPoint() == a) {
-				PoseVO poseVO1 = one.get(i);
-				x1 = poseVO1.getX();
-				y1 = poseVO1.getY();
-				z1 = poseVO1.getZ();
-			}
-
-			if (one.get(i).getPoint() == b) {
-				PoseVO poseVO2 = one.get(i);
-				x2 = poseVO2.getX();
-				y2 = poseVO2.getY();
-				z2 = poseVO2.getZ();
-			}
-		}
+		PoseVO poseVO1 = one.get(key1);
+		double x1 = poseVO1.getX();
+		double y1 = poseVO1.getY();
+		double z1 = poseVO1.getZ();
+	
+		PoseVO poseVO2 = one.get(key2);
+		double x2 = poseVO2.getX();
+		double y2 = poseVO2.getY();
+		double z2 = poseVO2.getZ();
+		
 		vector[0] = x2 - x1;
 		vector[1] = y2 - y1;
 		vector[2] = z2 - z1;
+		
 		return vector;
 	}
+	
+	/**
+	 * 벡터의 크기를 구하는 함수
+	 * @return 벡터 크기
+	 */
 
 	public double vectorSize(PoseVO poseVO) {
 		return Math.sqrt(Math.pow(poseVO.getX(), 2) + Math.pow(poseVO.getY(), 2) + Math.pow(poseVO.getZ(), 2));
@@ -216,11 +214,6 @@ public class PoseService {
 	public double vectorSize(double[] vector) {
 		return Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
 	}
-
-	public double unitVector(double coordinate, double unit) {
-		return Math.abs(coordinate / unit);
-	}
-
 	
 	/**
 	 * JS 상에서 resource/static/video 의 파일 갯수를 가져다 주는 함수

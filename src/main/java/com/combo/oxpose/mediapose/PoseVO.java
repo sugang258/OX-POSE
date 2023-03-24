@@ -5,8 +5,8 @@ import lombok.Data;
 @Data
 public class PoseVO {
 	
-	private Integer num;
-	private Integer point;
+	private Integer frame;
+	private Integer keyPoint;
 	private double x;
 	private double y;
 	private double z;

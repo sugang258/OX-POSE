@@ -59,12 +59,9 @@ public class PoseController {
 	}
 	
 	@ResponseBody
-	@PostMapping("/comparePosePrint")
-	public double posePrint(@RequestBody List<Map<String, Object>> data, Model model) {
-//		System.out.println(data);
-//		model.addAttribute("print", poseService.posePrint(jsonObject));
-		
-		return poseService.posePrint(data);
+	@PostMapping("/setAnalyzePose")
+	public double setAnalyzePose(@RequestBody List<Map<String, Object>> data, Model model) {
+		return poseService.setAnalyzePose(data);
 	}
 
 }
