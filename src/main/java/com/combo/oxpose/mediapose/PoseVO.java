@@ -11,5 +11,5 @@ public class PoseVO {
 	private double y;
 	private double z;
 	private double visibility;
-	
+	private double theta;
 }

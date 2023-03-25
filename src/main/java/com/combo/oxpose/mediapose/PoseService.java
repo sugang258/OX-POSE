@@ -16,6 +16,8 @@ public class PoseService {
 
 	private int frame = 1;
 
+	private final int[][] joints = {{11, 12, 13}, {12, 11, 14}, {13, 11, 15}, {14, 12, 16}, {23, 24, 25}, {24, 23, 26}, {25, 23, 27}, {26, 24, 28}};
+
 	
 	/**
 	 * 포즈의 키 포인트 데이터를 정규화, 각 관절의 각도를 구하는 함수 
@@ -38,17 +40,13 @@ public class PoseService {
 
 			onePoseData.add(poseVO);
 		}
-		frame++;
+		
+		for(int[] joint : joints) {
+			onePoseData.get(joint[0]).setTheta(getTheta(joint[0], joint[1], joint[2]));
+		}
+		
 		allPoseData.add(onePoseData);
-
-		getTheta(11,12,13); //좌 어깨(쇠골 -> 팔꿈치)
-		getTheta(12,11,14); //우 어깨(쇠골 -> 팔꿈치)
-		getTheta(13,11,15); //좌 팔꿈치
-		getTheta(14,12,16); //우 팔꿈치
-		getTheta(23,24,25); //좌 골반(우골반 -> 무릎)
-		getTheta(24,23,26); //우 골반(좌골반 -> 무릎)
-		getTheta(25,23,27); //좌 무릎
-		getTheta(26,24,28); //우 무릎
+		frame++;
 		
 		return getTheta(26,24,28); // 임시
 	}
