@@ -55,8 +55,38 @@ user_video_btn.addEventListener("click", () => user_input_video.click());
 
 // 파일 입력 이벤트
 user_input_video.addEventListener("change",()=> prepareAnalyze(user_input_video,user_video_box ,user_button_box, pose));
-compare_input_video.addEventListener("change",()=> prepareAnalyze(compare_input_video,compare_video_box ,compare_button_box, ComparePose));
+compare_input_video.addEventListener("change",()=> {
+	
+	setPlaybackRate(compare_input_video);
+	prepareAnalyze(compare_input_video,compare_video_box ,compare_button_box, ComparePose);
+});
 
+
+function setPlaybackRate(input_video) {
+	const files = input_video.files;
+	
+	if (!files || files.length === 0) {
+		console.error("No file selected");
+		return;
+	}
+
+	const file = input_video.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+//	const videoUrl = URL.createObjectURL(file);
+	
+	console.log("file = " + formData);
+	const url = "changePlaybackRate";
+	const options = {
+	    method: "POST",
+	    body: formData
+	};
+	
+	fetch(url, options)
+	    .then(response => response.json())
+	    .then(data => console.log(data))
+	    .catch(error => console.error(error));
+}
 
 /**
 	파일 입력시, 분석을 준비하는 함수
@@ -70,6 +100,7 @@ function prepareAnalyze(input_video,video_box ,button_box, pose) {
 	}
 
 	const file = input_video.files[0];
+	
 	const videoUrl = URL.createObjectURL(file);
 	var videoElement = createVideoElement(video_box);
 

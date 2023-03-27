@@ -1,11 +1,10 @@
 package com.combo.oxpose.mediapose;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,12 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.combo.oxpose.ffmpeg.VideoFileUtils;
 
 @Controller
 public class PoseController {
 
+	@Autowired
+	private VideoFileUtils videoFileUtils;
 	@Autowired
 	private PoseService poseService;
 
@@ -59,6 +62,15 @@ public class PoseController {
 	@PostMapping("/setAnalyzePose")
 	public double setAnalyzePose(@RequestBody List<Map<String, Object>> data, Model model) {
 		return poseService.setAnalyzePose(data);
+	}
+	
+	@ResponseBody
+	@PostMapping("/changePlaybackRate")
+	public void changePlaybackRate(@RequestParam("file") MultipartFile file) throws IOException, InterruptedException {
+		
+		videoFileUtils.changePlaybackRate(file, 2);
+		
+//		videoFileUtils.media_player_time(file);
 	}
 
 }
