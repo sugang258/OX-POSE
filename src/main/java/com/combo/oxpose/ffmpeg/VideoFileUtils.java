@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -23,36 +24,11 @@ public class VideoFileUtils {
 	@Value("${ffprobe.location}")
 	private String ffprobePath;
 
-	public String media_player_time(MultipartFile file) {
-		String returnData = "0";
-
-		if (file.isEmpty()) {
-			return "";
-		}
-
-		try {
-			String filePath = "C:/temp/test.mp4";
-			file.transferTo(new File(filePath));
-
-			FFprobe ffprobe = new FFprobe(ffprobePath); // window에 설치된 ffprobe.exe 경로
-			FFmpegProbeResult probeResult = ffprobe.probe(filePath); // 동영상 경로
-			FFmpegFormat format = probeResult.getFormat();
-			double second = format.duration; // 초단위
-
-			returnData = second + "";
-			System.out.println("second==" + second);
-
-			new File(filePath).delete();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			System.out.println("@@ media_player_time end @@");
-		}
-
-		return returnData;
-	}
-
+	/**
+	 * 비디오 파일을 배속해서 저장하는 함수
+	 * @param file : 파일
+	 * @param speed : 배속
+	 */
 	public void changePlaybackRate(MultipartFile file, double speed) throws IOException, InterruptedException {
 		String filePath = "src/main/resources/static/video/input.mp4";
 		String outPath = "src/main/resources/static/video/temp.mp4";
@@ -63,7 +39,10 @@ public class VideoFileUtils {
 		}
 		file.transferTo(temp);
 
-		// FFmpegBuilder 객체 생성
+		FFprobe ffprobe = new FFprobe(ffprobePath); // window에 설치된 ffprobe.exe 경로
+		FFmpegProbeResult probeResult = ffprobe.probe(filePath); // 동영상 경로
+		double second = probeResult.getFormat().duration;
+		log.info("playtime : {}",second);
 		FFmpegBuilder builder = new FFmpegBuilder().setInput(filePath) // 입력 파일 경로
 				.addOutput(outPath) // 출력 파일 경로
 				.setFormat("mp4") // 출력 파일 포맷
@@ -72,6 +51,7 @@ public class VideoFileUtils {
 				.setAudioCodec("aac") // 오디오 코덱 설정
 				.setVideoFrameRate(30) // 비디오 프레임 레이트 설정
 				.setVideoFilter("setpts=" + (1.0 / speed) + "*PTS") // 비디오 속도 조절
+				.setDuration((long)(second*1000/speed), TimeUnit.MILLISECONDS)
 				.done();
 
 		// FFmpeg 실행

@@ -110,7 +110,7 @@ function prepareAnalyze(input_video,video_box ,button_box, pose) {
 	button_box.style.display = "none";
 
 	var canvasCtx = startAnalyze(videoElement, canvasElement, pose);
-	pose.onResults((results) => responseAnalyze(results, canvasCtx));
+	pose.onResults((results) => responseAnalyze(results, canvasCtx, videoElement));
 }
 
 // 비디오 요소를 생성하는 함수
@@ -208,13 +208,13 @@ function startAnalyze(videoElement, canvasElement, poseModel) {
 	
 	poseModel.reset();
 	videoElement.load();
-	videoElement.addEventListener("playing", () => requestAnalyze(videoElement, canvasCtx, poseModel));
+	videoElement.addEventListener("playing", () => requestAnalyze(videoElement, canvasCtx, poseModel,0));
 	// 비디오 재생 후, 프레임 처리 시작
 	videoElement.onloadedmetadata = () => {
 		canvasElement.width = videoElement.videoWidth;
 		canvasElement.height = videoElement.videoHeight;
 
-		requestAnalyze(videoElement, canvasCtx, poseModel);
+		requestAnalyze(videoElement, canvasCtx, poseModel,0);
 	};
 	return canvasCtx;
 }
@@ -223,36 +223,37 @@ function startAnalyze(videoElement, canvasElement, poseModel) {
 /**
 	포즈 분석을 지속적으로 요청하는 함수
  */
-function requestAnalyze(videoElement, canvasCtx, poseModel) {
-	poseModel.send({ image: videoElement });
-	canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
 
-	if (videoElement.paused) { // 비디오 정지시 분석 정지
-		return;
-	}
-	requestAnimationFrame(() =>
-		requestAnalyze(videoElement, canvasCtx, poseModel), customConfig);
+function requestAnalyze(videoElement, canvasCtx, poseModel ) {
+	
+		poseModel.send({ image: videoElement });
+//		canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+		if (videoElement.paused) { // 비디오 정지시 분석 정지
+			return;
+		}
+		requestAnimationFrame(() =>
+			requestAnalyze(videoElement, canvasCtx, poseModel));
+	
 }
-
-const customConfig = {
-	maxFPS: 30,
-	skipFrames: 2
-};
-
 
 const user_result = document.querySelector(".user_result");
 
 /**
 	포즈 분석 결과로 스켈레톤을 그리는 함수
  */
-function responseAnalyze(results, canvasCtx) {
+function responseAnalyze(results, canvasCtx, videoElement) {
 	console.log(results);
 
 	let leftKeyPoint = [];
 	let rightKeyPoint = [];
-
+	
+	const timestamp = videoElement.currentTime;
+	
 	if(results.poseWorldLandmarks){
-		var jsonData = JSON.stringify(results.poseWorldLandmarks);
+		var jsonData = JSON.stringify({
+			poseWorldLandmarks: results.poseWorldLandmarks,
+ 			timestamp: timestamp,
+		});
 		$.ajax({
 			type: 'POST',
 			url: 'setAnalyzePose',
@@ -276,7 +277,7 @@ function responseAnalyze(results, canvasCtx) {
 		}
 		canvasCtx.save();
 		canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-		canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+//		canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
 
 		drawLandmarks(canvasCtx, leftKeyPoint, {
 			color: '#FF0000', lineWidth: 2

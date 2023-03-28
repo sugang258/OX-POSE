@@ -18,6 +18,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.combo.oxpose.ffmpeg.VideoFileUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Controller
 public class PoseController {
 
@@ -60,7 +63,8 @@ public class PoseController {
 
 	@ResponseBody
 	@PostMapping("/setAnalyzePose")
-	public double setAnalyzePose(@RequestBody List<Map<String, Object>> data, Model model) {
+	public double setAnalyzePose(@RequestBody Map<String, Object> data) {
+//		log.info("data = {}" , data);
 		return poseService.setAnalyzePose(data);
 	}
 	
@@ -69,8 +73,6 @@ public class PoseController {
 	public void changePlaybackRate(@RequestParam("file") MultipartFile file) throws IOException, InterruptedException {
 		
 		videoFileUtils.changePlaybackRate(file, 2);
-		
-//		videoFileUtils.media_player_time(file);
 	}
 
 }

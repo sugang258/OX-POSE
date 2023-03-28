@@ -12,4 +12,5 @@ public class PoseVO {
 	private double z;
 	private double visibility;
 	private double theta;
+	private double time;
 }

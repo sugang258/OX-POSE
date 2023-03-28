@@ -25,30 +25,32 @@ public class PoseService {
 	 * @param data : 분석 결과
 	 * @return (임시)
 	 */
-	public double setAnalyzePose(List<Map<String, Object>> data) {
-
-		normalizeData(data);
+	public double setAnalyzePose(Map<String, Object> data) {
+		List<Map<String,Object>> poseData = (List<Map<String, Object>>) data.get("poseWorldLandmarks");
+		double timestamp = Double.parseDouble(data.get("timestamp").toString());
+		
+		normalizeData(poseData);
 
 		onePoseData = new ArrayList<>();
-		for (int keyPoint = 0; keyPoint < data.size(); keyPoint++) {
+		for (int keyPoint = 0; keyPoint < poseData.size(); keyPoint++) {
 			PoseVO poseVO = new PoseVO();
 			poseVO.setFrame(frame);
 			poseVO.setKeyPoint(keyPoint);
-			poseVO.setX(Double.valueOf(data.get(keyPoint).get("x").toString()));
-			poseVO.setY(Double.valueOf(data.get(keyPoint).get("y").toString()));
-			poseVO.setZ(Double.valueOf(data.get(keyPoint).get("z").toString()));
-			poseVO.setVisibility(Double.valueOf(data.get(keyPoint).get("visibility").toString()));
-
+			poseVO.setX(Double.valueOf(poseData.get(keyPoint).get("x").toString()));
+			poseVO.setY(Double.valueOf(poseData.get(keyPoint).get("y").toString()));
+			poseVO.setZ(Double.valueOf(poseData.get(keyPoint).get("z").toString()));
+			poseVO.setVisibility(Double.valueOf(poseData.get(keyPoint).get("visibility").toString()));
+			poseVO.setTime(timestamp);
 			onePoseData.add(poseVO);
 		}
 
 		for (int[] joint : joints) {
 			onePoseData.get(joint[0]).setTheta(getTheta(joint[0], joint[1], joint[2]));
 		}
-
+		
 		allPoseData.add(onePoseData);
 		frame++;
-
+		log.info("frame : {} , time : {} ",frame , timestamp);
 		return getTheta(26, 24, 28); // 임시
 	}
 
