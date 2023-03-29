@@ -5,14 +5,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
+
+import com.combo.oxpose.mediapose.PoseVO.PoseKeyPoint;
+import com.combo.oxpose.mediapose.PoseVO.PoseTheta;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class PoseService {
 
-	private List<List<PoseVO>> allPoseData = new ArrayList<>();
-	private List<PoseVO> onePoseData = new ArrayList<>();
+	private List<PoseVO> allPoseData = new ArrayList<>();
+	private PoseVO poseVO;
 
 	private int frame = 1;
 
@@ -31,27 +35,38 @@ public class PoseService {
 		
 		normalizeData(poseData);
 
-		onePoseData = new ArrayList<>();
+		
+		poseVO = new PoseVO();
+		poseVO.setFrame(frame);
+		poseVO.setTime(timestamp);
+		
+		ArrayList<PoseKeyPoint> poseKeyPoints = new ArrayList<>();
 		for (int keyPoint = 0; keyPoint < poseData.size(); keyPoint++) {
-			PoseVO poseVO = new PoseVO();
-			poseVO.setFrame(frame);
-			poseVO.setKeyPoint(keyPoint);
-			poseVO.setX(Double.valueOf(poseData.get(keyPoint).get("x").toString()));
-			poseVO.setY(Double.valueOf(poseData.get(keyPoint).get("y").toString()));
-			poseVO.setZ(Double.valueOf(poseData.get(keyPoint).get("z").toString()));
-			poseVO.setVisibility(Double.valueOf(poseData.get(keyPoint).get("visibility").toString()));
-			poseVO.setTime(timestamp);
-			onePoseData.add(poseVO);
-		}
-
-		for (int[] joint : joints) {
-			onePoseData.get(joint[0]).setTheta(getTheta(joint[0], joint[1], joint[2]));
+			
+			PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
+			poseKeyPoint.setX(Double.valueOf(poseData.get(keyPoint).get("x").toString()));
+			poseKeyPoint.setY(Double.valueOf(poseData.get(keyPoint).get("y").toString()));
+			poseKeyPoint.setZ(Double.valueOf(poseData.get(keyPoint).get("z").toString()));
+			poseKeyPoint.setVisibility(Double.valueOf(poseData.get(keyPoint).get("visibility").toString()));
+			
+			poseKeyPoints.add(poseKeyPoint);
 		}
 		
-		allPoseData.add(onePoseData);
+		poseVO.setPoseKeyPoint(poseKeyPoints);
+		
+		ArrayList<PoseTheta> poseThetas = new ArrayList<>();
+		for (int[] joint : joints) {
+			PoseVO.PoseTheta poseTheta = poseVO.new PoseTheta();
+			
+			poseTheta.setKeyPoint(joint[0]);
+			poseTheta.setTheta(getTheta(joint[0], joint[1], joint[2]));
+			poseThetas.add(poseTheta);
+		}
+		poseVO.setPoseTheta(poseThetas);
+		
 		frame++;
 		log.info("frame : {} , time : {} ",frame , timestamp);
-		return getTheta(26, 24, 28); // 임시
+		return poseVO.getPoseTheta().get(1).getTheta(); // 임시
 	}
 
 	/**
@@ -166,8 +181,8 @@ public class PoseService {
 		double[] vector1 = new double[3];
 		double[] vector2 = new double[3];
 
-		vector1 = calVector(pointKey, sideKey1, onePoseData);
-		vector2 = calVector(pointKey, sideKey2, onePoseData);
+		vector1 = calVector(pointKey, sideKey1);
+		vector2 = calVector(pointKey, sideKey2);
 
 		return calTheta(vector1, vector2);
 	}
@@ -180,7 +195,6 @@ public class PoseService {
 	public double calTheta(double[] v1, double[] v2) {
 
 		double cosTheta = dotProduct(v1, v2) / (vectorSize(v1) * vectorSize(v2));
-
 		return Math.acos(cosTheta) * 180 / Math.PI;
 	}
 
@@ -189,15 +203,15 @@ public class PoseService {
 	 * 
 	 * @return vector (v1 -> v2)
 	 */
-	public double[] calVector(int key1, int key2, List<PoseVO> onePoseData) {
+	public double[] calVector(int key1, int key2) {
 
 		double[] vector = new double[3];
-		PoseVO poseVO1 = onePoseData.get(key1);
-		PoseVO poseVO2 = onePoseData.get(key2);
+		PoseKeyPoint poseKeyPoint1 = poseVO.getPoseKeyPoint().get(key1);
+		PoseKeyPoint poseKeyPoint2 = poseVO.getPoseKeyPoint().get(key2);
 
-		vector[0] = poseVO2.getX() - poseVO1.getX();
-		vector[1] = poseVO2.getY() - poseVO1.getY();
-		vector[2] = poseVO2.getZ() - poseVO1.getZ();
+		vector[0] = poseKeyPoint2.getX() - poseKeyPoint1.getX();
+		vector[1] = poseKeyPoint2.getY() - poseKeyPoint1.getY();
+		vector[2] = poseKeyPoint2.getZ() - poseKeyPoint1.getZ();
 
 		return vector;
 	}
@@ -208,8 +222,8 @@ public class PoseService {
 	 * @return 벡터 크기
 	 */
 
-	public double vectorSize(PoseVO poseVO) {
-		return Math.sqrt(Math.pow(poseVO.getX(), 2) + Math.pow(poseVO.getY(), 2) + Math.pow(poseVO.getZ(), 2));
+	public double vectorSize(PoseKeyPoint poseKeyPoint) {
+		return Math.sqrt(Math.pow(poseKeyPoint.getX(), 2) + Math.pow(poseKeyPoint.getY(), 2) + Math.pow(poseKeyPoint.getZ(), 2));
 	}
 
 	public double vectorSize(double[] vector) {

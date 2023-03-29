@@ -1,16 +1,29 @@
 package com.combo.oxpose.mediapose;
 
+import java.util.ArrayList;
+
 import lombok.Data;
 
 @Data
 public class PoseVO {
 	
 	private Integer frame;
-	private Integer keyPoint;
-	private double x;
-	private double y;
-	private double z;
-	private double visibility;
-	private double theta;
 	private double time;
+	private ArrayList<PoseKeyPoint> poseKeyPoint; // 33개
+	private ArrayList<PoseTheta> poseTheta; // 12개
+	
+	
+	@Data
+	public class PoseKeyPoint{
+		private double x;
+		private double y;
+		private double z;
+		private double visibility;
+	}
+	
+	@Data
+	public class PoseTheta{
+		private Integer keyPoint;
+		private double theta;
+	}
 }
