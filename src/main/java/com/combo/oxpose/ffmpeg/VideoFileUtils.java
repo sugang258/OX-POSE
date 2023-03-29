@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -28,10 +29,13 @@ public class VideoFileUtils {
 	 * 비디오 파일을 배속해서 저장하는 함수
 	 * @param file : 파일
 	 * @param speed : 배속
+	 * @return 
 	 */
-	public void changePlaybackRate(MultipartFile file, double speed) throws IOException, InterruptedException {
-		String filePath = "src/main/resources/static/video/input.mp4";
-		String outPath = "src/main/resources/static/video/temp.mp4";
+	public String changePlaybackRate(MultipartFile file, double speed) throws IOException, InterruptedException {
+		String fileName = file.getOriginalFilename();
+		log.info("filename = {}" , fileName);
+		String filePath = "src/main/webapp/resources/upload/" + UUID.randomUUID().toString() + fileName;
+		String outPath = "src/main/webapp/resources/upload/" + UUID.randomUUID().toString() +fileName;
 		
 		File temp = new File(filePath).getCanonicalFile();
 		if(!temp.exists()) {
@@ -59,6 +63,7 @@ public class VideoFileUtils {
 		executor.createJob(builder).run();
 
 		new File(filePath).delete();
+		return outPath;
 	}
 
 }

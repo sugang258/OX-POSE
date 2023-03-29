@@ -54,15 +54,15 @@ compare_video_btn.addEventListener("click", () => compare_input_video.click());
 user_video_btn.addEventListener("click", () => user_input_video.click());
 
 // 파일 입력 이벤트
-user_input_video.addEventListener("change",()=> prepareAnalyze(user_input_video,user_video_box ,user_button_box, pose));
-compare_input_video.addEventListener("change",()=> {
-	
-	setPlaybackRate(compare_input_video);
-	prepareAnalyze(compare_input_video,compare_video_box ,compare_button_box, ComparePose);
+user_input_video.addEventListener("change",()=> {
+	setPlaybackRate(user_input_video,user_video_box ,user_button_box, pose);
+});
+compare_input_video.addEventListener("change", ()=> {
+	setPlaybackRate(compare_input_video,compare_video_box ,compare_button_box, ComparePose);
 });
 
 
-function setPlaybackRate(input_video) {
+function setPlaybackRate(input_video, video_box, button_box, poseModel) {
 	const files = input_video.files;
 	
 	if (!files || files.length === 0) {
@@ -71,20 +71,30 @@ function setPlaybackRate(input_video) {
 	}
 
 	const file = input_video.files[0];
-  const formData = new FormData();
-  formData.append('file', file);
-//	const videoUrl = URL.createObjectURL(file);
+	const formData = new FormData();
+	formData.append('file', file);
 	
-	console.log("file = " + formData);
-	const url = "changePlaybackRate";
+	
 	const options = {
 	    method: "POST",
 	    body: formData
 	};
 	
-	fetch(url, options)
-	    .then(response => response.json())
-	    .then(data => console.log(data))
+	fetch("changePlaybackRate", options)
+	    .then(response => response.text())
+	    .then(data => {
+				console.log(data);
+				const videoElement = createVideoElement(video_box);
+				videoElement.pause();
+				const videoUrl = URL.createObjectURL(file);
+				videoElement.setAttribute("src", videoUrl);
+				
+				const video = createVideoElement(video_box);
+//				video.style.display="none";
+				video.src = data.replace('src/main/webapp','');
+				video.load();
+				prepareAnalyze(video, video_box, button_box, poseModel);
+			})
 	    .catch(error => console.error(error));
 }
 
@@ -92,26 +102,115 @@ function setPlaybackRate(input_video) {
 	파일 입력시, 분석을 준비하는 함수
  */
 function prepareAnalyze(input_video,video_box ,button_box, pose) {
-	const files = input_video.files;
-	
-	if (!files || files.length === 0) {
-		console.error("No file selected");
-		return;
-	}
-
-	const file = input_video.files[0];
-	
-	const videoUrl = URL.createObjectURL(file);
-	var videoElement = createVideoElement(video_box);
-
-	videoElement.pause();
-	videoElement.setAttribute("src", videoUrl);
+	console.log("prepare");
 	video_box.style.display = "block";
 	button_box.style.display = "none";
 
-	var canvasCtx = startAnalyze(videoElement, canvasElement, pose);
-	pose.onResults((results) => responseAnalyze(results, canvasCtx, videoElement));
+	var canvasCtx = startAnalyze(input_video, canvasElement, pose);
+	pose.onResults((results) => responseAnalyze(results, canvasCtx, input_video));
 }
+
+/**
+	포즈 분석을 시작하는 함수
+ */
+function startAnalyze(videoElement, canvasElement, poseModel) {
+	console.log("start");
+	const canvasCtx = canvasElement.getContext('2d');
+	
+	poseModel.reset();
+	videoElement.load();
+	
+	videoElement.onloadedmetadata = () => {
+		canvasElement.width = videoElement.videoWidth;
+		canvasElement.height = videoElement.videoHeight;
+		console.log("loaded");
+		poseModel.initialize().then(() => {
+			videoElement.play();
+			requestAnalyze(videoElement, canvasCtx, poseModel);
+		});
+	};
+	return canvasCtx;
+}
+
+/**
+	포즈 분석을 지속적으로 요청하는 함수
+ */
+function requestAnalyze(videoElement, canvasCtx, poseModel ) {
+	
+		poseModel.send({ image: videoElement });
+//		canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+		console.log("send");
+		if (videoElement.paused) { // 비디오 정지시 분석 정지
+			videoElement.remove();
+			return;
+		}
+		requestAnimationFrame(() =>
+			requestAnalyze(videoElement, canvasCtx, poseModel));
+}
+
+const user_result = document.querySelector(".user_result");
+
+/**
+	포즈 분석 결과로 스켈레톤을 그리는 함수
+ */
+function responseAnalyze(results, canvasCtx, videoElement) {
+	console.log(results);
+
+	let leftKeyPoint = [];
+	let rightKeyPoint = [];
+	
+	const timestamp = videoElement.currentTime;
+	
+	if(results.poseWorldLandmarks){
+		var jsonData = JSON.stringify({
+			poseWorldLandmarks: results.poseWorldLandmarks,
+ 			timestamp: timestamp,
+		});
+		$.ajax({
+			type: 'POST',
+			url: 'setAnalyzePose',
+			contentType: 'application/json',
+			processData: false,
+			dataType: 'json',
+			data: jsonData,
+			success: function(data) {
+				user_result.innerHTML = data; // 각도출력 (임시)
+			}
+		})
+	}
+
+	if (results.poseLandmarks) {
+		for (let i = 0; i < results.poseLandmarks.length; i++) {
+			if (leftIndices.includes(i)) {
+				leftKeyPoint.push(results.poseLandmarks[i]);
+			} else {
+				rightKeyPoint.push(results.poseLandmarks[i]);
+			}
+		}
+		canvasCtx.save();
+		canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+//		canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+
+		drawLandmarks(canvasCtx, leftKeyPoint, {
+			color: '#FF0000', lineWidth: 2
+		});
+		drawLandmarks(canvasCtx, rightKeyPoint, {
+			color: '#0000FF', lineWidth: 2
+		});
+		drawConnectors(canvasCtx, results.poseLandmarks, leftConnections, {
+			color: '#00FFFF', lineWidth: 3
+		});
+		drawConnectors(canvasCtx, results.poseLandmarks, rightConnections, {
+			color: '#00FF00', lineWidth: 3
+		});
+		drawConnectors(canvasCtx, results.poseLandmarks, centerConnections, {
+			color: '#EEEEEE', lineWidth: 3
+		});
+		canvasCtx.restore();
+	}
+}
+
+
 
 // 비디오 요소를 생성하는 함수
 function createVideoElement(video_box) {
@@ -200,101 +299,4 @@ var ComparePose = new Pose({
 pose.setOptions(poseOptions);
 ComparePose.setOptions(poseOptions);
 
-/**
-	포즈 분석을 시작하는 함수
- */
-function startAnalyze(videoElement, canvasElement, poseModel) {
-	const canvasCtx = canvasElement.getContext('2d');
-	
-	poseModel.reset();
-	videoElement.load();
-	videoElement.addEventListener("playing", () => requestAnalyze(videoElement, canvasCtx, poseModel,0));
-	// 비디오 재생 후, 프레임 처리 시작
-	videoElement.onloadedmetadata = () => {
-		canvasElement.width = videoElement.videoWidth;
-		canvasElement.height = videoElement.videoHeight;
-
-		requestAnalyze(videoElement, canvasCtx, poseModel,0);
-	};
-	return canvasCtx;
-}
-
-
-/**
-	포즈 분석을 지속적으로 요청하는 함수
- */
-
-function requestAnalyze(videoElement, canvasCtx, poseModel ) {
-	
-		poseModel.send({ image: videoElement });
-//		canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-		if (videoElement.paused) { // 비디오 정지시 분석 정지
-			return;
-		}
-		requestAnimationFrame(() =>
-			requestAnalyze(videoElement, canvasCtx, poseModel));
-	
-}
-
-const user_result = document.querySelector(".user_result");
-
-/**
-	포즈 분석 결과로 스켈레톤을 그리는 함수
- */
-function responseAnalyze(results, canvasCtx, videoElement) {
-	console.log(results);
-
-	let leftKeyPoint = [];
-	let rightKeyPoint = [];
-	
-	const timestamp = videoElement.currentTime;
-	
-	if(results.poseWorldLandmarks){
-		var jsonData = JSON.stringify({
-			poseWorldLandmarks: results.poseWorldLandmarks,
- 			timestamp: timestamp,
-		});
-		$.ajax({
-			type: 'POST',
-			url: 'setAnalyzePose',
-			contentType: 'application/json',
-			processData: false,
-			dataType: 'json',
-			data: jsonData,
-			success: function(data) {
-				user_result.innerHTML = data; // 각도출력 (임시)
-			}
-		})
-	}
-
-	if (results.poseLandmarks) {
-		for (let i = 0; i < results.poseLandmarks.length; i++) {
-			if (leftIndices.includes(i)) {
-				leftKeyPoint.push(results.poseLandmarks[i]);
-			} else {
-				rightKeyPoint.push(results.poseLandmarks[i]);
-			}
-		}
-		canvasCtx.save();
-		canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-//		canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-
-		drawLandmarks(canvasCtx, leftKeyPoint, {
-			color: '#FF0000', lineWidth: 2
-		});
-		drawLandmarks(canvasCtx, rightKeyPoint, {
-			color: '#0000FF', lineWidth: 2
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, leftConnections, {
-			color: '#00FFFF', lineWidth: 3
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, rightConnections, {
-			color: '#00FF00', lineWidth: 3
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, centerConnections, {
-			color: '#EEEEEE', lineWidth: 3
-		});
-		canvasCtx.restore();
-	}
-}
 

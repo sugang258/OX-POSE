@@ -70,9 +70,9 @@ public class PoseController {
 	
 	@ResponseBody
 	@PostMapping("/changePlaybackRate")
-	public void changePlaybackRate(@RequestParam("file") MultipartFile file) throws IOException, InterruptedException {
+	public String changePlaybackRate(@RequestParam("file") MultipartFile file) throws IOException, InterruptedException {
 		
-		videoFileUtils.changePlaybackRate(file, 2);
+		return videoFileUtils.changePlaybackRate(file, 2);
 	}
 
 }
