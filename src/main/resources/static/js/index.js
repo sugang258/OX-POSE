@@ -33,10 +33,8 @@ const centerConnections = [
 	[11, 12], [23, 24]
 ];
 
-
 let camera;
 let user_video, compare_video;
-
 
 // 비디오 크기를 조절하는 함수
 video_ratio.addEventListener("change", function() {
@@ -45,7 +43,6 @@ video_ratio.addEventListener("change", function() {
 	for (let i = 0; i < video.length; i++) {
 		video[i].style.height = video[0].videoWidth * video_ratio.value + "px";
 	}
-
 });
 
 
@@ -207,7 +204,25 @@ function responseAnalyze(results, canvasCtx, videoElement) {
 			color: '#EEEEEE', lineWidth: 3
 		});
 		canvasCtx.restore();
+		
+		console.log("// " + leftKeyPoint);
+		console.log("// " + leftIndices);
+		//POSE_CONNECTIONS
+		if (results.poseWorldLandmarks) {
+	    grid.updateLandmarks(results.poseWorldLandmarks,[
+		{list : leftConnections, color :'LEFTCONNECTIONS'},
+		{list : rightConnections , color : 'RIGHTCONNECTIONS'} , 
+		{list :  centerConnections , color : '0xEEEEEE'}]
+	     ,[{
+		list :  leftIndices, color : 'LEFT'},{list : rightIndices, color: 'RIGHT'}
+	]);
+	
+	  	} else {
+	    	grid.updateLandmarks([]);
+		}
+ 	 	
 	}
+	
 }
 
 
@@ -298,5 +313,32 @@ var ComparePose = new Pose({
 
 pose.setOptions(poseOptions);
 ComparePose.setOptions(poseOptions);
+
+const colorMap = [
+  { color: 'red', list: [1, 2, 3] },
+  { color: 'blue', list: [4, 5, 6] },
+  { color: undefined, list: [7, 8, 9] },
+];
+
+const landmarkContainer =
+    document.getElementsByClassName('landmark-grid-container')[0];
+const grid = new LandmarkGrid(landmarkContainer, {
+  connectionColor: 0xCCCCCC,
+  definedColors: [
+	{name: 'LEFT', value: 0xFF0000}, 
+	{name: 'RIGHT', value: 0x0000FF},
+	{name: 'LEFTCONNECTIONS', value: 0x75fbfd}, 
+	{name: 'RIGHTCONNECTIONS', value: 0x00FFAA}],
+	
+  range: 1,
+  fitToGrid: true,
+  labelSuffix: 'm',
+  landmarkSize: 2,
+  numCellsPerAxis: 2,
+  showHidden: false,
+  centered: true,
+});
+
+
 
 

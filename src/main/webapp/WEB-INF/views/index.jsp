@@ -120,6 +120,18 @@
 .modal_video_info {
 	margin: 2%;
 }
+ .landmark-grid-container {
+      height: 100%;
+      width: 100%;
+      top:0;
+      left:0;
+      background-color: #99999999;
+    }
+    .square-box {
+      width: 400px;
+      height: 400px;
+     
+    }
 }
 </style>
 <!-- boot strap -->
@@ -130,8 +142,8 @@
 <script
 	src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
 	crossorigin="anonymous"></script>
-<!--     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script> -->
-<!--     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils_3d/control_utils_3d.js" crossorigin="anonymous"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils_3d/control_utils_3d.js" crossorigin="anonymous"></script>
 <script
 	src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
 	crossorigin="anonymous"></script>
@@ -196,13 +208,21 @@
 			<h3 class="compare_result"></h3>
 			<canvas class="compare_canvas"></canvas>
 		</div>
-		<div>
+		<div style="display: inline-flex;">
+			<div>
 			<h3 class="user_result"></h3>
 			<canvas class="output_canvas"></canvas>
+			</div>
+			<div class='square-box'>
+			    <div class="landmark-grid-container">
+			    </div>
+			</div>
+		
 		</div>
-
+		
 
 	</div>
+	
 
 
 	<div class="modal_background"></div>
