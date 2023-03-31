@@ -33,7 +33,7 @@ public class VideoFileUtils {
 	 */
 	public String changePlaybackRate(MultipartFile file, double speed) throws IOException, InterruptedException {
 		String fileName = file.getOriginalFilename();
-		log.info("filename = {}" , fileName);
+		
 		String filePath = "src/main/webapp/resources/upload/" + UUID.randomUUID().toString() + fileName;
 		String outPath = "src/main/webapp/resources/upload/" + UUID.randomUUID().toString() +fileName;
 		
@@ -59,7 +59,7 @@ public class VideoFileUtils {
 				.done();
 
 		// FFmpeg 실행
-		FFmpegExecutor executor = new FFmpegExecutor(new FFmpeg(ffmpegPath), new FFprobe(ffprobePath));
+		FFmpegExecutor executor = new FFmpegExecutor(new FFmpeg(ffmpegPath), ffprobe);
 		executor.createJob(builder).run();
 
 		new File(filePath).delete();

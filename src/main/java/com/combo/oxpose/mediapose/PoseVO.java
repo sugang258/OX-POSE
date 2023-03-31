@@ -9,6 +9,7 @@ public class PoseVO {
 	
 	private Integer frame;
 	private double time;
+	private ArrayList<PoseKeyPoint> poseLandmarks;
 	private ArrayList<PoseKeyPoint> poseKeyPoint; // 33개
 	private ArrayList<PoseTheta> poseTheta; // 12개
 	

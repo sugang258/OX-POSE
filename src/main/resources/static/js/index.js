@@ -58,7 +58,9 @@ compare_input_video.addEventListener("change", ()=> {
 	setPlaybackRate(compare_input_video,compare_video_box ,compare_button_box, ComparePose);
 });
 
-
+/**
+	비디오 태그 입력시, 2배속으로 전처리 후 포즈분석 진행하는 함수
+ */
 function setPlaybackRate(input_video, video_box, button_box, poseModel) {
 	const files = input_video.files;
 	
@@ -70,7 +72,6 @@ function setPlaybackRate(input_video, video_box, button_box, poseModel) {
 	const file = input_video.files[0];
 	const formData = new FormData();
 	formData.append('file', file);
-	
 	
 	const options = {
 	    method: "POST",
@@ -86,14 +87,107 @@ function setPlaybackRate(input_video, video_box, button_box, poseModel) {
 				const videoUrl = URL.createObjectURL(file);
 				videoElement.setAttribute("src", videoUrl);
 				
+				compare_video = videoElement;
+//				compare_video.addEventListener('timeupdate', getTimeStampAnalyze);
+			
 				const video = createVideoElement(video_box);
-//				video.style.display="none";
+				video.style.display="none";
 				video.src = data.replace('src/main/webapp','');
 				video.load();
 				prepareAnalyze(video, video_box, button_box, poseModel);
 			})
 	    .catch(error => console.error(error));
 }
+
+/**
+	비디오 재생시간 변경시, 재생시간에 해당하는 분석 결과를 출력해주는 함수
+ */
+function getTimeStampAnalyze (canvasCtx){
+	
+	if(compare_video.currentTime == 0){
+		return;
+	}
+	
+    const data = {
+		timeStamp : compare_video.currentTime
+	}
+    
+    console.log(JSON.stringify(data));
+    
+    const options = {
+	    method: "POST",
+	    headers: {
+	      "Content-Type": "application/json"
+	    },
+	    body: JSON.stringify(data)
+	};
+	
+	fetch("getTimeStampAnalyze", options)
+	    .then(response => response.json())
+	    .then(data => {
+				drawSkeleton(data,canvasCtx);
+			})
+	    .catch(error => console.error(error));
+	
+}
+
+
+function drawSkeleton(results, canvasCtx){
+	console.log(results);
+	let leftKeyPoint = [];
+	let rightKeyPoint = [];
+	
+	
+	for (let i = 0; i < results.poseLandmarks.length; i++) {
+			if (leftIndices.includes(i)) {
+				leftKeyPoint.push(results.poseLandmarks[i]);
+			} else {
+				rightKeyPoint.push(results.poseLandmarks[i]);
+			}
+		}
+		canvasCtx.save();
+		canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+//		canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+
+		drawLandmarks(canvasCtx, leftKeyPoint, {
+			color: '#FF0000', lineWidth: 2
+		});
+		drawLandmarks(canvasCtx, rightKeyPoint, {
+			color: '#0000FF', lineWidth: 2
+		});
+		drawConnectors(canvasCtx, results.poseLandmarks, leftConnections, {
+			color: '#00FFFF', lineWidth: 3
+		});
+		drawConnectors(canvasCtx, results.poseLandmarks, rightConnections, {
+			color: '#00FF00', lineWidth: 3
+		});
+		drawConnectors(canvasCtx, results.poseLandmarks, centerConnections, {
+			color: '#EEEEEE', lineWidth: 3
+		});
+		canvasCtx.restore();
+	
+	
+	if (results.poseKeyPoint) {
+	    grid.updateLandmarks(results.poseKeyPoint,[
+			{list : leftConnections, color :'LEFTCONNECTIONS'},
+			{list : rightConnections, color : 'RIGHTCONNECTIONS'} , 
+			{list : centerConnections, color : '0xEEEEEE'}]
+	     ,[
+			{list : leftIndices, color : 'LEFT'},
+			{list : rightIndices, color: 'RIGHT'}
+		]);
+	
+  	} else {
+    	grid.updateLandmarks([]);
+	}
+	
+	
+	
+}
+
+
+
+
 
 /**
 	파일 입력시, 분석을 준비하는 함수
@@ -104,6 +198,7 @@ function prepareAnalyze(input_video,video_box ,button_box, pose) {
 	button_box.style.display = "none";
 
 	var canvasCtx = startAnalyze(input_video, canvasElement, pose);
+	compare_video.addEventListener('timeupdate',() => getTimeStampAnalyze(canvasCtx));
 	pose.onResults((results) => responseAnalyze(results, canvasCtx, input_video));
 }
 
@@ -136,7 +231,6 @@ function requestAnalyze(videoElement, canvasCtx, poseModel ) {
 	
 		poseModel.send({ image: videoElement });
 //		canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-		console.log("send");
 		if (videoElement.paused) { // 비디오 정지시 분석 정지
 			videoElement.remove();
 			return;
@@ -151,7 +245,7 @@ const user_result = document.querySelector(".user_result");
 	포즈 분석 결과로 스켈레톤을 그리는 함수
  */
 function responseAnalyze(results, canvasCtx, videoElement) {
-	console.log(results);
+//	console.log(results);
 
 	let leftKeyPoint = [];
 	let rightKeyPoint = [];
@@ -161,6 +255,7 @@ function responseAnalyze(results, canvasCtx, videoElement) {
 	if(results.poseWorldLandmarks){
 		var jsonData = JSON.stringify({
 			poseWorldLandmarks: results.poseWorldLandmarks,
+			poseLandmarks: results.poseLandmarks,
  			timestamp: timestamp,
 		});
 		$.ajax({
@@ -205,24 +300,21 @@ function responseAnalyze(results, canvasCtx, videoElement) {
 		});
 		canvasCtx.restore();
 		
-		console.log("// " + leftKeyPoint);
-		console.log("// " + leftIndices);
-		//POSE_CONNECTIONS
+		
 		if (results.poseWorldLandmarks) {
 	    grid.updateLandmarks(results.poseWorldLandmarks,[
-		{list : leftConnections, color :'LEFTCONNECTIONS'},
-		{list : rightConnections , color : 'RIGHTCONNECTIONS'} , 
-		{list :  centerConnections , color : '0xEEEEEE'}]
-	     ,[{
-		list :  leftIndices, color : 'LEFT'},{list : rightIndices, color: 'RIGHT'}
-	]);
+			{list : leftConnections, color :'LEFTCONNECTIONS'},
+			{list : rightConnections, color : 'RIGHTCONNECTIONS'} , 
+			{list : centerConnections, color : '0xEEEEEE'}]
+	     ,[
+			{list : leftIndices, color : 'LEFT'},
+			{list : rightIndices, color: 'RIGHT'}
+		]);
 	
 	  	} else {
 	    	grid.updateLandmarks([]);
 		}
- 	 	
 	}
-	
 }
 
 
@@ -314,15 +406,29 @@ var ComparePose = new Pose({
 pose.setOptions(poseOptions);
 ComparePose.setOptions(poseOptions);
 
-const colorMap = [
-  { color: 'red', list: [1, 2, 3] },
-  { color: 'blue', list: [4, 5, 6] },
-  { color: undefined, list: [7, 8, 9] },
-];
+class CustomLandmarkGrid extends LandmarkGrid {
+  constructor(container, config) {
+    super(container, config);
+  }
+
+  createScene() {
+    super.createScene();
+  }
+
+  render() {
+    // 회전을 완전히 비활성화하려면
+    this.config.isRotating = false;
+
+    // 회전 속도를 조절하려면 [0,1]
+    this.config.rotationSpeed = 1; 
+
+    super.render();
+  }
+}
 
 const landmarkContainer =
     document.getElementsByClassName('landmark-grid-container')[0];
-const grid = new LandmarkGrid(landmarkContainer, {
+const grid = new CustomLandmarkGrid(landmarkContainer, {
   connectionColor: 0xCCCCCC,
   definedColors: [
 	{name: 'LEFT', value: 0xFF0000}, 
@@ -338,6 +444,8 @@ const grid = new LandmarkGrid(landmarkContainer, {
   showHidden: false,
   centered: true,
 });
+
+
 
 
 

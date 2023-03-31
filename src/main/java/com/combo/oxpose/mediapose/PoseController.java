@@ -74,5 +74,11 @@ public class PoseController {
 		
 		return videoFileUtils.changePlaybackRate(file, 2);
 	}
-
+	
+	@ResponseBody
+	@PostMapping("/getTimeStampAnalyze")
+	public PoseVO getTimeStampAnalyze(@RequestBody Map<String, Double> data) {
+		
+		return poseService.getTimeStampAnalyze(data.get("timeStamp"));
+	}
 }

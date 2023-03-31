@@ -30,17 +30,17 @@ public class PoseService {
 	 * @return (임시)
 	 */
 	public double setAnalyzePose(Map<String, Object> data) {
-		List<Map<String,Object>> poseData = (List<Map<String, Object>>) data.get("poseWorldLandmarks");
-		double timestamp = Double.parseDouble(data.get("timestamp").toString());
+		List<Map<String,Object>> poseWorldData = (List<Map<String, Object>>) data.get("poseWorldLandmarks");
+		List<Map<String,Object>> poseData = (List<Map<String, Object>>) data.get("poseLandmarks");
 		
-		normalizeData(poseData);
-
+		double timestamp = Double.parseDouble(data.get("timestamp").toString());
 		
 		poseVO = new PoseVO();
 		poseVO.setFrame(frame);
-		poseVO.setTime(timestamp);
+		poseVO.setTime(timestamp * 2);
 		
-		ArrayList<PoseKeyPoint> poseKeyPoints = new ArrayList<>();
+		
+		ArrayList<PoseKeyPoint> poseLandmarks = new ArrayList<>();
 		for (int keyPoint = 0; keyPoint < poseData.size(); keyPoint++) {
 			
 			PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
@@ -48,6 +48,23 @@ public class PoseService {
 			poseKeyPoint.setY(Double.valueOf(poseData.get(keyPoint).get("y").toString()));
 			poseKeyPoint.setZ(Double.valueOf(poseData.get(keyPoint).get("z").toString()));
 			poseKeyPoint.setVisibility(Double.valueOf(poseData.get(keyPoint).get("visibility").toString()));
+			
+			poseLandmarks.add(poseKeyPoint);
+		}
+		poseVO.setPoseLandmarks(poseLandmarks);
+		
+		normalizeData(poseWorldData);
+
+		
+		
+		ArrayList<PoseKeyPoint> poseKeyPoints = new ArrayList<>();
+		for (int keyPoint = 0; keyPoint < poseWorldData.size(); keyPoint++) {
+			
+			PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
+			poseKeyPoint.setX(Double.valueOf(poseWorldData.get(keyPoint).get("x").toString()));
+			poseKeyPoint.setY(Double.valueOf(poseWorldData.get(keyPoint).get("y").toString()));
+			poseKeyPoint.setZ(Double.valueOf(poseWorldData.get(keyPoint).get("z").toString()));
+			poseKeyPoint.setVisibility(Double.valueOf(poseWorldData.get(keyPoint).get("visibility").toString()));
 			
 			poseKeyPoints.add(poseKeyPoint);
 		}
@@ -64,7 +81,9 @@ public class PoseService {
 		}
 		poseVO.setPoseTheta(poseThetas);
 		
+		allPoseData.add(poseVO);
 		frame++;
+		
 		log.info("frame : {} , time : {} ",frame , timestamp);
 		return poseVO.getPoseTheta().get(1).getTheta(); // 임시
 	}
@@ -221,15 +240,51 @@ public class PoseService {
 	 * 
 	 * @return 벡터 크기
 	 */
-
 	public double vectorSize(PoseKeyPoint poseKeyPoint) {
 		return Math.sqrt(Math.pow(poseKeyPoint.getX(), 2) + Math.pow(poseKeyPoint.getY(), 2) + Math.pow(poseKeyPoint.getZ(), 2));
 	}
-
 	public double vectorSize(double[] vector) {
 		return Math.sqrt(Math.pow(vector[0], 2) + Math.pow(vector[1], 2) + Math.pow(vector[2], 2));
 	}
 
+	
+	
+	/**
+	 * 주어진 timeStamp와 가장 가까운 Pose 결과를 return 하는 함수
+	 * @param {double}timeStamp
+	 * @return 
+	 * @return 
+	 */
+	public PoseVO getTimeStampAnalyze(double timeStamp) {
+		
+		int low = 0;
+		int high = allPoseData.size();
+		int mid = 0;
+		double closest = allPoseData.get(0).getTime();
+		
+		 while (low <= high) {
+	            mid = (low + high) / 2;
+
+	            if (timeStamp == allPoseData.get(mid).getTime()) {
+	                closest = allPoseData.get(mid).getTime();
+	                break;
+	            }
+
+	            if (timeStamp < allPoseData.get(mid).getTime()) {
+	                high = mid - 1;
+	            } else {
+	                low = mid + 1;
+	            }
+
+	            if (Math.abs(allPoseData.get(mid).getTime() - timeStamp) < Math.abs(closest - timeStamp)) {
+	                closest = allPoseData.get(mid).getTime();
+	            }
+	        }
+		 log.info("timeStamp = {} closest = {} mid = {}" , timeStamp,closest,mid);
+		 return allPoseData.get(mid);
+	}
+	
+	
 	/**
 	 * JS 상에서 resource/static/video 의 파일 갯수를 가져다 주는 함수 현재는 DB연결 전에 사용하려고 작성하였지만, 더는
 	 * 사용하지 않는다.
