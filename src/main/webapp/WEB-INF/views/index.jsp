@@ -120,6 +120,9 @@
 .modal_video_info {
 	margin: 2%;
 }
+
+/* 3D grid */
+
  .landmark-grid-container {
       height: 100%;
       width: 100%;
@@ -132,11 +135,11 @@
       height: 400px;
      
     }
-}
+    
+    
+
+
 </style>
-<!-- boot strap -->
-<!-- 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous"> -->
-<!--  	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script> -->
 
 <!-- media pipe -->
 <script
@@ -162,7 +165,7 @@
 
 	<div>
 		<input id="video_ratio" type="range" min="0.5" max="1.6" step="any">
-		<label for="volume">영상 비율</label>
+		<label for="video_ratio">영상 비율</label>
 	</div>
 
 

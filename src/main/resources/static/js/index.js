@@ -104,7 +104,7 @@ function setPlaybackRate(input_video, video_box, button_box, poseModel) {
  */
 function getTimeStampAnalyze (canvasCtx){
 	
-	if(compare_video.currentTime == 0){
+	if(compare_video.currentTime === 0){
 		return;
 	}
 	
@@ -198,7 +198,10 @@ function prepareAnalyze(input_video,video_box ,button_box, pose) {
 	button_box.style.display = "none";
 
 	var canvasCtx = startAnalyze(input_video, canvasElement, pose);
-	compare_video.addEventListener('timeupdate',() => getTimeStampAnalyze(canvasCtx));
+	// compare_video.addEventListener('timeupdate',() => getTimeStampAnalyze(canvasCtx));
+	compare_video.addEventListener('seeking', () =>
+		getTimeStampAnalyze(canvasCtx)
+	);
 	pose.onResults((results) => responseAnalyze(results, canvasCtx, input_video));
 }
 
@@ -381,7 +384,7 @@ compare_video_back.addEventListener("click", function() {
 })
 
 
-var poseOptions = {
+const poseOptions = {
 	upperBodyOnly: true,
 	modelComplexity: 1,
 	smoothLandmarks: true,
@@ -389,15 +392,15 @@ var poseOptions = {
 	minDetectionConfidence: 0.5,
 	minTrackingConfidence: 0.5,
 	maxNumDetection: 3
-}
+};
 
-var pose = new Pose({
+const pose = new Pose({
 	locateFile: (file) => {
 		return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
 	}
 });
 
-var ComparePose = new Pose({
+const ComparePose = new Pose({
 	locateFile: (file) => {
 		return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
 	}

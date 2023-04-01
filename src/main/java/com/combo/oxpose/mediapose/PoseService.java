@@ -18,7 +18,7 @@ public class PoseService {
 	private List<PoseVO> allPoseData = new ArrayList<>();
 	private PoseVO poseVO;
 
-	private int frame = 1;
+	private int frame = 0;
 
 	private final int[][] joints = { { 11, 12, 13 }, { 12, 11, 14 }, { 13, 11, 15 }, { 14, 12, 16 }, { 23, 24, 25 },
 			{ 24, 23, 26 }, { 25, 23, 27 }, { 26, 24, 28 } };
@@ -30,63 +30,130 @@ public class PoseService {
 	 * @return (임시)
 	 */
 	public double setAnalyzePose(Map<String, Object> data) {
-		List<Map<String,Object>> poseWorldData = (List<Map<String, Object>>) data.get("poseWorldLandmarks");
-		List<Map<String,Object>> poseData = (List<Map<String, Object>>) data.get("poseLandmarks");
-		
+		List<Map<String, Object>> poseWorldData = (List<Map<String, Object>>) data.get("poseWorldLandmarks");
+		List<Map<String, Object>> poseData = (List<Map<String, Object>>) data.get("poseLandmarks");
+
 		double timestamp = Double.parseDouble(data.get("timestamp").toString());
-		
+
 		poseVO = new PoseVO();
-		poseVO.setFrame(frame);
+
+		poseVO.setFrame(frame * 3);
 		poseVO.setTime(timestamp * 2);
-		
-		
+
 		ArrayList<PoseKeyPoint> poseLandmarks = new ArrayList<>();
+
 		for (int keyPoint = 0; keyPoint < poseData.size(); keyPoint++) {
-			
+
 			PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
 			poseKeyPoint.setX(Double.valueOf(poseData.get(keyPoint).get("x").toString()));
 			poseKeyPoint.setY(Double.valueOf(poseData.get(keyPoint).get("y").toString()));
 			poseKeyPoint.setZ(Double.valueOf(poseData.get(keyPoint).get("z").toString()));
 			poseKeyPoint.setVisibility(Double.valueOf(poseData.get(keyPoint).get("visibility").toString()));
-			
+
 			poseLandmarks.add(poseKeyPoint);
 		}
 		poseVO.setPoseLandmarks(poseLandmarks);
-		
+
 		normalizeData(poseWorldData);
 
-		
-		
 		ArrayList<PoseKeyPoint> poseKeyPoints = new ArrayList<>();
 		for (int keyPoint = 0; keyPoint < poseWorldData.size(); keyPoint++) {
-			
+
 			PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
 			poseKeyPoint.setX(Double.valueOf(poseWorldData.get(keyPoint).get("x").toString()));
 			poseKeyPoint.setY(Double.valueOf(poseWorldData.get(keyPoint).get("y").toString()));
 			poseKeyPoint.setZ(Double.valueOf(poseWorldData.get(keyPoint).get("z").toString()));
 			poseKeyPoint.setVisibility(Double.valueOf(poseWorldData.get(keyPoint).get("visibility").toString()));
-			
+
 			poseKeyPoints.add(poseKeyPoint);
 		}
-		
+
 		poseVO.setPoseKeyPoint(poseKeyPoints);
-		
+
 		ArrayList<PoseTheta> poseThetas = new ArrayList<>();
 		for (int[] joint : joints) {
 			PoseVO.PoseTheta poseTheta = poseVO.new PoseTheta();
-			
+
 			poseTheta.setKeyPoint(joint[0]);
 			poseTheta.setTheta(getTheta(joint[0], joint[1], joint[2]));
 			poseThetas.add(poseTheta);
 		}
 		poseVO.setPoseTheta(poseThetas);
-		
+
+		addMidAnalyze();
+
 		allPoseData.add(poseVO);
 		frame++;
-		
-		log.info("frame : {} , time : {} ",frame , timestamp);
+
+		log.info("frame : {} , time : {} allPoseData.size = {}", frame, timestamp, allPoseData.size());
 		return poseVO.getPoseTheta().get(1).getTheta(); // 임시
 	}
+
+
+	/**
+	 * 부족한 프레임을 보충하는 함수
+	 */
+	public void addMidAnalyze(){
+
+		if (!allPoseData.isEmpty()) {
+			PoseVO previousPoseVO = allPoseData.get(allPoseData.size() - 1);
+
+			for(int count = 1 ; count < 3; count ++){
+				PoseVO midPoseVO = new PoseVO();
+				midPoseVO.setFrame(frame * 3 - (3 - count));
+
+				midPoseVO.setTime(previousPoseVO.getTime() + (poseVO.getTime() - previousPoseVO.getTime()) * count /3);
+
+				ArrayList<PoseKeyPoint> poseLandmarks = poseVO.getPoseLandmarks();
+				ArrayList<PoseKeyPoint> previousPoseLandmarks = previousPoseVO.getPoseLandmarks();
+				ArrayList<PoseKeyPoint> midPoseLandmarks = new ArrayList<>();
+				for (int keyPoint = 0; keyPoint < poseVO.getPoseLandmarks().size(); keyPoint++) {
+
+					PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
+					poseKeyPoint.setX(
+							previousPoseLandmarks.get(keyPoint).getX() +
+									((poseLandmarks.get(keyPoint).getX() - previousPoseLandmarks.get(keyPoint).getX())* count/ 3));
+					poseKeyPoint.setY(
+							poseLandmarks.get(keyPoint).getY() +
+									((poseLandmarks.get(keyPoint).getY() - previousPoseLandmarks.get(keyPoint).getY())* count/ 3));
+					poseKeyPoint.setZ(
+							poseLandmarks.get(keyPoint).getZ() +
+									((poseLandmarks.get(keyPoint).getZ() - previousPoseLandmarks.get(keyPoint).getZ())* count/ 3));
+					poseKeyPoint.setVisibility(
+							poseLandmarks.get(keyPoint).getVisibility() +
+									((poseLandmarks.get(keyPoint).getVisibility() - previousPoseLandmarks.get(keyPoint).getVisibility())* count/ 3));
+
+					midPoseLandmarks.add(poseKeyPoint);
+				}
+				midPoseVO.setPoseLandmarks(midPoseLandmarks);
+
+				ArrayList<PoseKeyPoint> poseKeyPoints = poseVO.getPoseKeyPoint();
+				ArrayList<PoseKeyPoint> previousPoseKeyPoints = previousPoseVO.getPoseKeyPoint();
+				ArrayList<PoseKeyPoint> midPoseKeyPoints = new ArrayList<>();
+				for (int keyPoint = 0; keyPoint < poseVO.getPoseKeyPoint().size(); keyPoint++) {
+
+					PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
+					poseKeyPoint.setX(previousPoseKeyPoints.get(keyPoint).getX() +
+							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
+					poseKeyPoint.setY(previousPoseKeyPoints.get(keyPoint).getX() +
+							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
+					poseKeyPoint.setZ(previousPoseKeyPoints.get(keyPoint).getX() +
+							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
+					poseKeyPoint.setVisibility(previousPoseKeyPoints.get(keyPoint).getX() +
+							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
+
+					midPoseKeyPoints.add(poseKeyPoint);
+				}
+
+				midPoseVO.setPoseKeyPoint(poseKeyPoints);
+
+				allPoseData.add(midPoseVO);
+
+			}
+		}
+	}
+
+
 
 	/**
 	 * 데이터를 신체 기준의 새로운 축을 기준으로 정규화하는 함수 좌어깨 : 11 / 우어깨 : 12 / 좌엉 : 23 / 우엉 : 24
