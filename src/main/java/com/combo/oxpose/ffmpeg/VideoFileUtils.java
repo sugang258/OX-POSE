@@ -29,7 +29,7 @@ public class VideoFileUtils {
 	 * 비디오 파일을 배속해서 저장하는 함수
 	 * @param file : 파일
 	 * @param speed : 배속
-	 * @return 
+	 * @return path : 배속된 영상의 path
 	 */
 	public String changePlaybackRate(MultipartFile file, double speed) throws IOException, InterruptedException {
 		String fileName = file.getOriginalFilename();
@@ -63,7 +63,7 @@ public class VideoFileUtils {
 		executor.createJob(builder).run();
 
 		new File(filePath).delete();
-		return outPath;
+		return outPath.replace("src/main/webapp","");
 	}
 
 }

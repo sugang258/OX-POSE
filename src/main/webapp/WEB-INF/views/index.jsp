@@ -123,11 +123,9 @@
 
 /* 3D grid */
 
- .landmark-grid-container {
+ .compare_landmark_grid_container , .user_landmark_grid_container {
       height: 100%;
       width: 100%;
-      top:0;
-      left:0;
       background-color: #99999999;
     }
     .square-box {
@@ -203,28 +201,38 @@
 		</div>
 	</section>
 
-
-
 	<hr>
-	<div id="canvas_box">
-		<div>
-			<h3 class="compare_result"></h3>
-			<canvas class="compare_canvas"></canvas>
-		</div>
-		<div style="display: inline-flex;">
-			<div>
-			<h3 class="user_result"></h3>
-			<canvas class="output_canvas"></canvas>
-			</div>
-			<div class='square-box'>
-			    <div class="landmark-grid-container">
-			    </div>
-			</div>
-		
-		</div>
-		
 
-	</div>
+<%--결과 출력 부분--%>
+	<section class="body_section">
+		<div id="canvas_box" style="display: inline-flex">
+			<div>
+				<div>
+					<h3 class="compare_result"></h3>
+					<canvas class="compare_canvas"></canvas>
+				</div>
+				<div class='square-box'>
+					<div class="compare_landmark_grid_container">
+					</div>
+				</div>
+			</div>
+
+
+			<div>
+				<div>
+					<h3 class="user_result"></h3>
+					<canvas class="user_canvas"></canvas>
+				</div>
+
+				<div class='square-box'>
+					<div class="user_landmark_grid_container">
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+
 	
 
 

@@ -1,48 +1,36 @@
-
-const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const video_ratio = document.getElementById("video_ratio");
-// 사용자 영상 부분
-const user_video_box = document.getElementsByClassName('user_video_box')[0];
-const user_button_box = document.getElementsByClassName('user_button_box')[0];
 const user_input_video = document.getElementById("user_input_video");
 const user_video_btn = document.getElementById("user_video_btn");
 const user_live_button = document.getElementById("user_live_button");
-const user_video_back = document.getElementsByClassName('user_video_back')[0];
-
-// 비교 영상 부분
-const compare_video_box = document.getElementsByClassName('compare_video_box')[0];
-const compare_button_box = document.getElementsByClassName('compare_button_box')[0];
 const compare_video_btn = document.getElementById("compare_video_btn");
 const compare_input_video = document.getElementById("compare_input_video");
-const compare_video_back = document.getElementsByClassName('compare_video_back')[0];
-const compare_canvas = document.getElementsByClassName("compare_canvas")[0];
-const compare_canvasCtx = compare_canvas.getContext('2d');
+
+const user_result = document.querySelector(".user_result");
 
 // keyPoint 구분
 const leftIndices = [1, 2, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31];
 const rightIndices = [4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
 const leftConnections = [
-	[11, 13], [13, 15], [15, 21], [15, 17], [15, 19], [17, 19],
-	[11, 23], [23, 25], [25, 27], [27, 29], [27, 31], [29, 31]
+    [11, 13], [13, 15], [15, 21], [15, 17], [15, 19], [17, 19],
+    [11, 23], [23, 25], [25, 27], [27, 29], [27, 31], [29, 31]
 ];
 const rightConnections = [
-	[12, 14], [14, 16], [16, 22], [16, 18], [16, 20], [18, 20],
-	[12, 24], [24, 26], [26, 28], [28, 30], [28, 32], [30, 32]
+    [12, 14], [14, 16], [16, 22], [16, 18], [16, 20], [18, 20],
+    [12, 24], [24, 26], [26, 28], [28, 30], [28, 32], [30, 32]
 ];
 const centerConnections = [
-	[11, 12], [23, 24]
+    [11, 12], [23, 24]
 ];
 
 let camera;
-let user_video, compare_video;
 
 // 비디오 크기를 조절하는 함수
-video_ratio.addEventListener("change", function() {
-	const video = document.getElementsByClassName("video");
+video_ratio.addEventListener("change", function () {
+    const video = document.getElementsByClassName("video");
 
-	for (let i = 0; i < video.length; i++) {
-		video[i].style.height = video[0].videoWidth * video_ratio.value + "px";
-	}
+    for (let i = 0; i < video.length; i++) {
+        video[i].style.height = video[0].videoWidth * video_ratio.value + "px";
+    }
 });
 
 
@@ -51,405 +39,357 @@ compare_video_btn.addEventListener("click", () => compare_input_video.click());
 user_video_btn.addEventListener("click", () => user_input_video.click());
 
 // 파일 입력 이벤트
-user_input_video.addEventListener("change",()=> {
-	setPlaybackRate(user_input_video,user_video_box ,user_button_box, pose);
-});
-compare_input_video.addEventListener("change", ()=> {
-	setPlaybackRate(compare_input_video,compare_video_box ,compare_button_box, ComparePose);
-});
+user_input_video.addEventListener("change", () => Analyze("user"));
+compare_input_video.addEventListener("change", () => Analyze("compare"));
+
 
 /**
-	비디오 태그 입력시, 2배속으로 전처리 후 포즈분석 진행하는 함수
+ * 비디오 분석 함수
+ * @param {string} part - user or compare
  */
-function setPlaybackRate(input_video, video_box, button_box, poseModel) {
-	const files = input_video.files;
-	
-	if (!files || files.length === 0) {
-		console.error("No file selected");
-		return;
-	}
+async function Analyze(part) {
+    const input_video = document.getElementById(part + "_input_video");
+    const video_box = document.getElementsByClassName(part + '_video_box')[0];
+    const button_box = document.getElementsByClassName(part + '_button_box')[0];
+    const canvasElement = document.getElementsByClassName(part + '_canvas')[0];
+    const canvasCtx = canvasElement.getContext('2d');
+    const show_video = createVideoElement(video_box, URL.createObjectURL(input_video.files[0]));
+    const video_back = document.getElementsByClassName(part + '_video_back')[0];
+    const landmarkContainer =
+        document.getElementsByClassName(part + '_landmark_grid_container')[0];
+    const grid = new CustomLandmarkGrid(landmarkContainer, gridOption);
 
-	const file = input_video.files[0];
-	const formData = new FormData();
-	formData.append('file', file);
-	
-	const options = {
-	    method: "POST",
-	    body: formData
-	};
-	
-	fetch("changePlaybackRate", options)
-	    .then(response => response.text())
-	    .then(data => {
-				console.log(data);
-				const videoElement = createVideoElement(video_box);
-				videoElement.pause();
-				const videoUrl = URL.createObjectURL(file);
-				videoElement.setAttribute("src", videoUrl);
-				
-				compare_video = videoElement;
-//				compare_video.addEventListener('timeupdate', getTimeStampAnalyze);
-			
-				const video = createVideoElement(video_box);
-				video.style.display="none";
-				video.src = data.replace('src/main/webapp','');
-				video.load();
-				prepareAnalyze(video, video_box, button_box, poseModel);
-			})
-	    .catch(error => console.error(error));
+
+    show_video.pause();
+    const analyze_video = createVideoElement(video_box, await setPlaybackRate(input_video));
+    analyze_video.style.display = "none";
+
+    video_box.style.display = "block";
+    button_box.style.display = "none";
+
+    analyze_video.onloadedmetadata = () => {
+        canvasCtx.canvas.width = analyze_video.width;
+        canvasCtx.canvas.height = analyze_video.height;
+
+        comparePose.initialize().then(() => {
+            analyze_video.play();
+            requestAnalyze(analyze_video, canvasCtx, comparePose);
+        });
+    };
+    show_video.addEventListener('play', () =>
+        setInterval(() => {
+            getTimeStampAnalyze(canvasCtx, show_video.currentTime, grid);
+        }, 100)
+    );
+
+    show_video.addEventListener('seeking', () =>
+        getTimeStampAnalyze(canvasCtx, show_video.currentTime, grid)
+    );
+
+    comparePose.onResults((results) => {
+        saveAnalyzeData(results, analyze_video.currentTime);
+        drawSkeleton(results, canvasCtx, grid);
+    });
+
+
+    video_back.addEventListener("click", () => {
+        deleteVideo(show_video, analyze_video)
+
+        video_box.style.display = "none";
+        button_box.style.display = "flex";
+    });
+
 }
 
 /**
-	비디오 재생시간 변경시, 재생시간에 해당하는 분석 결과를 출력해주는 함수
+ * 주어진 비디오의 2배속 비디오를 저장하고, 경로를 반환하는 함수
+ * @param input_video - inputFile 태그
+ * @returns {Promise<string>} - 2배속 비디오 경로
  */
-function getTimeStampAnalyze (canvasCtx){
-	
-	if(compare_video.currentTime === 0){
-		return;
-	}
-	
-    const data = {
-		timeStamp : compare_video.currentTime
-	}
-    
-    console.log(JSON.stringify(data));
-    
+async function setPlaybackRate(input_video) {
+    const files = input_video.files;
+
+    if (!files || files.length === 0) {
+        console.error("No file selected");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', input_video.files[0]);
+
     const options = {
-	    method: "POST",
-	    headers: {
-	      "Content-Type": "application/json"
-	    },
-	    body: JSON.stringify(data)
-	};
-	
-	fetch("getTimeStampAnalyze", options)
-	    .then(response => response.json())
-	    .then(data => {
-				drawSkeleton(data,canvasCtx);
-			})
-	    .catch(error => console.error(error));
-	
-}
+        method: "POST",
+        body: formData
+    };
 
-
-function drawSkeleton(results, canvasCtx){
-	console.log(results);
-	let leftKeyPoint = [];
-	let rightKeyPoint = [];
-	
-	
-	for (let i = 0; i < results.poseLandmarks.length; i++) {
-			if (leftIndices.includes(i)) {
-				leftKeyPoint.push(results.poseLandmarks[i]);
-			} else {
-				rightKeyPoint.push(results.poseLandmarks[i]);
-			}
-		}
-		canvasCtx.save();
-		canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-//		canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-
-		drawLandmarks(canvasCtx, leftKeyPoint, {
-			color: '#FF0000', lineWidth: 2
-		});
-		drawLandmarks(canvasCtx, rightKeyPoint, {
-			color: '#0000FF', lineWidth: 2
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, leftConnections, {
-			color: '#00FFFF', lineWidth: 3
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, rightConnections, {
-			color: '#00FF00', lineWidth: 3
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, centerConnections, {
-			color: '#EEEEEE', lineWidth: 3
-		});
-		canvasCtx.restore();
-	
-	
-	if (results.poseKeyPoint) {
-	    grid.updateLandmarks(results.poseKeyPoint,[
-			{list : leftConnections, color :'LEFTCONNECTIONS'},
-			{list : rightConnections, color : 'RIGHTCONNECTIONS'} , 
-			{list : centerConnections, color : '0xEEEEEE'}]
-	     ,[
-			{list : leftIndices, color : 'LEFT'},
-			{list : rightIndices, color: 'RIGHT'}
-		]);
-	
-  	} else {
-    	grid.updateLandmarks([]);
-	}
-	
-	
-	
-}
-
-
-
-
-
-/**
-	파일 입력시, 분석을 준비하는 함수
- */
-function prepareAnalyze(input_video,video_box ,button_box, pose) {
-	console.log("prepare");
-	video_box.style.display = "block";
-	button_box.style.display = "none";
-
-	var canvasCtx = startAnalyze(input_video, canvasElement, pose);
-	// compare_video.addEventListener('timeupdate',() => getTimeStampAnalyze(canvasCtx));
-	compare_video.addEventListener('seeking', () =>
-		getTimeStampAnalyze(canvasCtx)
-	);
-	pose.onResults((results) => responseAnalyze(results, canvasCtx, input_video));
+    try {
+        const response = await fetch("changePlaybackRate", options);
+        const data = await response.text();
+        return data;
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 /**
-	포즈 분석을 시작하는 함수
+ * VideoElement 생성 함수
+ * @param video_box - 생성될 비디오 부모 박스
+ * @param srcURL - 비디오 경로
+ * @returns {HTMLVideoElement}
  */
-function startAnalyze(videoElement, canvasElement, poseModel) {
-	console.log("start");
-	const canvasCtx = canvasElement.getContext('2d');
-	
-	poseModel.reset();
-	videoElement.load();
-	
-	videoElement.onloadedmetadata = () => {
-		canvasElement.width = videoElement.videoWidth;
-		canvasElement.height = videoElement.videoHeight;
-		console.log("loaded");
-		poseModel.initialize().then(() => {
-			videoElement.play();
-			requestAnalyze(videoElement, canvasCtx, poseModel);
-		});
-	};
-	return canvasCtx;
+function createVideoElement(video_box, srcURL) {
+    const video = document.createElement("video");
+    video.className = "video";
+    video.setAttribute("controls", "controls");
+    video.setAttribute("src", srcURL);
+
+    video.height = 700;
+    video.width = 400;
+    video_box.appendChild(video);
+    return video;
 }
 
+
 /**
-	포즈 분석을 지속적으로 요청하는 함수
+ * 분석을 반복적으로 요청하는 함수
+ * @param videoElement - 분석 영상
+ * @param canvasCtx - 결과가 그려질 canvas
+ * @param poseModel - 포즈 객체
  */
-function requestAnalyze(videoElement, canvasCtx, poseModel ) {
-	
-		poseModel.send({ image: videoElement });
+function requestAnalyze(videoElement, canvasCtx, poseModel) {
+    poseModel.send({image: videoElement});
 //		canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-		if (videoElement.paused) { // 비디오 정지시 분석 정지
-			videoElement.remove();
-			return;
-		}
-		requestAnimationFrame(() =>
-			requestAnalyze(videoElement, canvasCtx, poseModel));
+    if (videoElement.paused) { // 비디오 정지시 분석 정지
+        videoElement.remove();
+        return;
+    }
+    requestAnimationFrame(() =>
+        requestAnalyze(videoElement, canvasCtx, poseModel));
 }
 
-const user_result = document.querySelector(".user_result");
 
 /**
-	포즈 분석 결과로 스켈레톤을 그리는 함수
+ *  timeStamp에 가장 가까운 분석 결과를 출력해주는 함수
+ * @param canvasCtx
+ * @param timeStamp
+ * @param grid
  */
-function responseAnalyze(results, canvasCtx, videoElement) {
-//	console.log(results);
+function getTimeStampAnalyze(canvasCtx, timeStamp, grid) {
 
-	let leftKeyPoint = [];
-	let rightKeyPoint = [];
-	
-	const timestamp = videoElement.currentTime;
-	
-	if(results.poseWorldLandmarks){
-		var jsonData = JSON.stringify({
-			poseWorldLandmarks: results.poseWorldLandmarks,
-			poseLandmarks: results.poseLandmarks,
- 			timestamp: timestamp,
-		});
-		$.ajax({
-			type: 'POST',
-			url: 'setAnalyzePose',
-			contentType: 'application/json',
-			processData: false,
-			dataType: 'json',
-			data: jsonData,
-			success: function(data) {
-				user_result.innerHTML = data; // 각도출력 (임시)
-			}
-		})
-	}
+    if (timeStamp === 0) {
+        return;
+    }
+    const data = {
+        timeStamp: timeStamp
+    }
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    };
+    fetch("getTimeStampAnalyze", options)
+        .then(response => response.json())
+        .then(data => {
+            drawSkeleton(data, canvasCtx, grid);
+        })
+        .catch(error => console.error(error));
 
-	if (results.poseLandmarks) {
-		for (let i = 0; i < results.poseLandmarks.length; i++) {
-			if (leftIndices.includes(i)) {
-				leftKeyPoint.push(results.poseLandmarks[i]);
-			} else {
-				rightKeyPoint.push(results.poseLandmarks[i]);
-			}
-		}
-		canvasCtx.save();
-		canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
-//		canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+}
 
-		drawLandmarks(canvasCtx, leftKeyPoint, {
-			color: '#FF0000', lineWidth: 2
-		});
-		drawLandmarks(canvasCtx, rightKeyPoint, {
-			color: '#0000FF', lineWidth: 2
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, leftConnections, {
-			color: '#00FFFF', lineWidth: 3
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, rightConnections, {
-			color: '#00FF00', lineWidth: 3
-		});
-		drawConnectors(canvasCtx, results.poseLandmarks, centerConnections, {
-			color: '#EEEEEE', lineWidth: 3
-		});
-		canvasCtx.restore();
-		
-		
-		if (results.poseWorldLandmarks) {
-	    grid.updateLandmarks(results.poseWorldLandmarks,[
-			{list : leftConnections, color :'LEFTCONNECTIONS'},
-			{list : rightConnections, color : 'RIGHTCONNECTIONS'} , 
-			{list : centerConnections, color : '0xEEEEEE'}]
-	     ,[
-			{list : leftIndices, color : 'LEFT'},
-			{list : rightIndices, color: 'RIGHT'}
-		]);
-	
-	  	} else {
-	    	grid.updateLandmarks([]);
-		}
-	}
+
+/**
+ * 스켈레톤을 그려주는 함수
+ * @param results - 분석 결과
+ * @param canvasCtx - 2D 캔버스
+ * @param grid - 3D 캔버스
+ */
+function drawSkeleton(results, canvasCtx, grid) {
+    if (results.poseLandmarks) {
+        let leftKeyPoint = [];
+        let rightKeyPoint = [];
+
+        for (let i = 0; i < results.poseLandmarks.length; i++) {
+            if (leftIndices.includes(i)) {
+                leftKeyPoint.push(results.poseLandmarks[i]);
+            } else {
+                rightKeyPoint.push(results.poseLandmarks[i]);
+            }
+        }
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+        // canvasCtx.drawImage(results.image, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
+
+        drawLandmarks(canvasCtx, leftKeyPoint, {
+            color: '#FF0000', lineWidth: 2
+        });
+        drawLandmarks(canvasCtx, rightKeyPoint, {
+            color: '#0000FF', lineWidth: 2
+        });
+        drawConnectors(canvasCtx, results.poseLandmarks, leftConnections, {
+            color: '#00FFFF', lineWidth: 3
+        });
+        drawConnectors(canvasCtx, results.poseLandmarks, rightConnections, {
+            color: '#00FF00', lineWidth: 3
+        });
+        drawConnectors(canvasCtx, results.poseLandmarks, centerConnections, {
+            color: '#EEEEEE', lineWidth: 3
+        });
+        canvasCtx.restore();
+
+    }
+    if (results.poseWorldLandmarks) {
+        grid.updateLandmarks(results.poseWorldLandmarks, [
+                {list: leftConnections, color: 'LEFTCONNECTIONS'},
+                {list: rightConnections, color: 'RIGHTCONNECTIONS'},
+                {list: centerConnections, color: '0xEEEEEE'}]
+            , [
+                {list: leftIndices, color: 'LEFT'},
+                {list: rightIndices, color: 'RIGHT'}
+            ]);
+
+    } else {
+        grid.updateLandmarks([]);
+    }
+}
+
+
+/**
+ * 분석 결과를 저장하는 함수
+ * @param results
+ * @param timestamp
+ */
+function saveAnalyzeData(results, timestamp) {
+    if (results.poseWorldLandmarks) {
+        const jsonData = JSON.stringify({
+            poseWorldLandmarks: results.poseWorldLandmarks,
+            poseLandmarks: results.poseLandmarks,
+            timestamp: timestamp,
+        });
+        $.ajax({
+            type: 'POST',
+            url: 'setAnalyzePose',
+            contentType: 'application/json',
+            processData: false,
+            dataType: 'json',
+            data: jsonData,
+            success: function (data) {
+                user_result.innerHTML = data; // 각도출력 (임시)
+            }
+        })
+    }
+}
+
+/**
+ * 뒤로가기를 눌렀을때 비디오를 삭제하는 함수
+ * @param show_video
+ * @param analyze_video
+ */
+function deleteVideo(show_video, analyze_video) {
+    show_video.remove();
+    analyze_video.remove();
+
+    if (camera != null) {
+        camera.stop();
+    }
 }
 
 
 
-// 비디오 요소를 생성하는 함수
-function createVideoElement(video_box) {
-	video = document.createElement("video");
-	video.className = "video";
-	video.setAttribute("controls", "controls");
-	video_box.appendChild(video);
-	return video;
-}
+
+
+
+
+
+
+
+
 
 // User live 버튼 클릭 이벤트
-user_live_button.addEventListener("click", function() {
-	pose.reset();
-	user_video = createVideoElement(user_video_box);
-
-	camera = new Camera(user_video, {
-		onFrame: async () => {
-			await pose.send({ image: user_video });
-		},
-		width: 1280,
-		height: 720
-	});
-
-	canvasElement.width = 1280 / 2;
-	canvasElement.height = 720 / 2;
-	canvasCtx = canvasElement.getContext('2d');
-	pose.onResults((results) => responseAnalyze(results, canvasCtx));
-
-	camera.start();
-	user_video_box.style.display = "block";
-	user_button_box.style.display = "none";
-});
-
-// 뒤로가기 버튼
-user_video_back.addEventListener("click", function() {
-	const video = user_video_box.querySelector('video');
-	video.pause();
-
-	if (camera != null) {
-		console.log("hi");
-		camera.stop();
-	}
-	video.setAttribute("src", " ");
-	user_input_video.value = "";
-	user_video_box.style.display = "none";
-	user_button_box.style.display = "flex";
-
-	video.remove();
-})
-
-compare_video_back.addEventListener("click", function() {
-	const video = compare_video_box.querySelector('video');
-	video.pause();
-
-	video.setAttribute("src", " ");
-	compare_input_video.value = "";
-	compare_video_box.style.display = "none";
-	compare_button_box.style.display = "flex";
-
-	video.remove();
-})
+// user_live_button.addEventListener("click", function() {
+// 	pose.reset();
+// 	user_video = createVideoElement(user_video_box);
+//
+// 	camera = new Camera(user_video, {
+// 		onFrame: async () => {
+// 			await pose.send({ image: user_video });
+// 		},
+// 		width: 1280,
+// 		height: 720
+// 	});
+//
+// 	canvasElement.width = 1280 / 2;
+// 	canvasElement.height = 720 / 2;
+// 	canvasCtx = canvasElement.getContext('2d');
+// 	pose.onResults((results) => responseAnalyze(results, canvasCtx));
+//
+// 	camera.start();
+// 	user_video_box.style.display = "block";
+// 	user_button_box.style.display = "none";
+// });
 
 
-const poseOptions = {
-	upperBodyOnly: true,
-	modelComplexity: 1,
-	smoothLandmarks: true,
-	enableSegmentation: false,
-	minDetectionConfidence: 0.5,
-	minTrackingConfidence: 0.5,
-	maxNumDetection: 3
-};
+// 포즈 세팅
 
 const pose = new Pose({
-	locateFile: (file) => {
-		return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-	}
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+    }
 });
 
-const ComparePose = new Pose({
-	locateFile: (file) => {
-		return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-	}
+const comparePose = new Pose({
+    locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+    }
 });
+
+const poseOptions = {
+    upperBodyOnly: true,
+    modelComplexity: 1,
+    smoothLandmarks: true,
+    enableSegmentation: false,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5,
+    maxNumDetection: 3
+};
 
 pose.setOptions(poseOptions);
-ComparePose.setOptions(poseOptions);
+comparePose.setOptions(poseOptions);
 
-class CustomLandmarkGrid extends LandmarkGrid {
-  constructor(container, config) {
-    super(container, config);
-  }
 
-  createScene() {
-    super.createScene();
-  }
+const gridOption = {
+    connectionColor: 0xCCCCCC,
+    definedColors: [
+        {name: 'LEFT', value: 0xFF0000},
+        {name: 'RIGHT', value: 0x0000FF},
+        {name: 'LEFTCONNECTIONS', value: 0x75fbfd},
+        {name: 'RIGHTCONNECTIONS', value: 0x00FFAA}],
 
-  render() {
-    // 회전을 완전히 비활성화하려면
-    this.config.isRotating = false;
-
-    // 회전 속도를 조절하려면 [0,1]
-    this.config.rotationSpeed = 1; 
-
-    super.render();
-  }
+    range: 1,
+    fitToGrid: true,
+    labelSuffix: 'm',
+    landmarkSize: 2,
+    numCellsPerAxis: 2,
+    showHidden: false,
+    centered: true,
 }
 
-const landmarkContainer =
-    document.getElementsByClassName('landmark-grid-container')[0];
-const grid = new CustomLandmarkGrid(landmarkContainer, {
-  connectionColor: 0xCCCCCC,
-  definedColors: [
-	{name: 'LEFT', value: 0xFF0000}, 
-	{name: 'RIGHT', value: 0x0000FF},
-	{name: 'LEFTCONNECTIONS', value: 0x75fbfd}, 
-	{name: 'RIGHTCONNECTIONS', value: 0x00FFAA}],
-	
-  range: 1,
-  fitToGrid: true,
-  labelSuffix: 'm',
-  landmarkSize: 2,
-  numCellsPerAxis: 2,
-  showHidden: false,
-  centered: true,
-});
 
+class CustomLandmarkGrid extends LandmarkGrid {
+    constructor(container, config) {
+        super(container, config);
+    }
 
+    // createScene() {
+    //   super.createScene();
+    // }
 
+    render() {
+        this.config.isRotating = false; // 회전을 완전히 비활성화하려면
+        this.config.rotationSpeed = 1;  // 회전 속도를 조절하려면 [0,1]
 
-
+        super.render();
+    }
+}
 

@@ -68,7 +68,7 @@ public class PoseService {
 			poseKeyPoints.add(poseKeyPoint);
 		}
 
-		poseVO.setPoseKeyPoint(poseKeyPoints);
+		poseVO.setPoseWorldLandmarks(poseKeyPoints);
 
 		ArrayList<PoseTheta> poseThetas = new ArrayList<>();
 		for (int[] joint : joints) {
@@ -127,10 +127,10 @@ public class PoseService {
 				}
 				midPoseVO.setPoseLandmarks(midPoseLandmarks);
 
-				ArrayList<PoseKeyPoint> poseKeyPoints = poseVO.getPoseKeyPoint();
-				ArrayList<PoseKeyPoint> previousPoseKeyPoints = previousPoseVO.getPoseKeyPoint();
+				ArrayList<PoseKeyPoint> poseKeyPoints = poseVO.getPoseWorldLandmarks();
+				ArrayList<PoseKeyPoint> previousPoseKeyPoints = previousPoseVO.getPoseWorldLandmarks();
 				ArrayList<PoseKeyPoint> midPoseKeyPoints = new ArrayList<>();
-				for (int keyPoint = 0; keyPoint < poseVO.getPoseKeyPoint().size(); keyPoint++) {
+				for (int keyPoint = 0; keyPoint < poseVO.getPoseWorldLandmarks().size(); keyPoint++) {
 
 					PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
 					poseKeyPoint.setX(previousPoseKeyPoints.get(keyPoint).getX() +
@@ -145,7 +145,7 @@ public class PoseService {
 					midPoseKeyPoints.add(poseKeyPoint);
 				}
 
-				midPoseVO.setPoseKeyPoint(poseKeyPoints);
+				midPoseVO.setPoseWorldLandmarks(poseKeyPoints);
 
 				allPoseData.add(midPoseVO);
 
@@ -292,8 +292,8 @@ public class PoseService {
 	public double[] calVector(int key1, int key2) {
 
 		double[] vector = new double[3];
-		PoseKeyPoint poseKeyPoint1 = poseVO.getPoseKeyPoint().get(key1);
-		PoseKeyPoint poseKeyPoint2 = poseVO.getPoseKeyPoint().get(key2);
+		PoseKeyPoint poseKeyPoint1 = poseVO.getPoseWorldLandmarks().get(key1);
+		PoseKeyPoint poseKeyPoint2 = poseVO.getPoseWorldLandmarks().get(key2);
 
 		vector[0] = poseKeyPoint2.getX() - poseKeyPoint1.getX();
 		vector[1] = poseKeyPoint2.getY() - poseKeyPoint1.getY();
