@@ -60,6 +60,14 @@ async function Analyze(part) {
     const grid = new CustomLandmarkGrid(landmarkContainer, gridOption);
 
 
+    await fetch("preparePoseAnalyze", {
+        method: "POST",
+        headers: {
+            'Content-Type': 'text/plain'
+        },
+        body: part,
+    });
+
     show_video.pause();
     const analyze_video = createVideoElement(video_box, await setPlaybackRate(input_video));
     analyze_video.style.display = "none";
@@ -97,6 +105,8 @@ async function Analyze(part) {
 
         video_box.style.display = "none";
         button_box.style.display = "flex";
+
+        landmarkContainer.querySelector('div').remove();
     });
 
 }
@@ -161,9 +171,10 @@ function requestAnalyze(videoElement, canvasCtx, poseModel) {
 //		canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
     if (videoElement.paused) { // 비디오 정지시 분석 정지
         videoElement.remove();
-
-        fetch("resetFrame",{method : "POST"});
-        console.log("프레임 초기화");
+        fetch("removeVideo", {
+            method : "POST",
+            body : videoElement.src
+        })
         return;
     }
     requestAnimationFrame(() =>

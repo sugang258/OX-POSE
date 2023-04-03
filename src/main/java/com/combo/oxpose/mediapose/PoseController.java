@@ -82,9 +82,16 @@ public class PoseController {
 	}
 
 	@ResponseBody
-	@PostMapping("/resetFrame")
-	public void resetFrame(){
-		poseService.resetFrame();
+	@PostMapping("/preparePoseAnalyze")
+	public void resetSetting(@RequestBody String part){
+		poseService.preparePoseAnalyze(part);
+	}
+
+	@ResponseBody
+	@PostMapping("/removeVideo")
+	public void removeVideo(@RequestBody String src){
+		log.info("anla src = {}" , src);
+		poseService.removeVideo(src);
 	}
 
 }

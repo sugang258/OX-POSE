@@ -271,11 +271,8 @@ public class PoseService {
 	 */
 	public double getTheta(int pointKey, int sideKey1, int sideKey2) {
 
-		double[] vector1 = new double[3];
-		double[] vector2 = new double[3];
-
-		vector1 = calVector(pointKey, sideKey1);
-		vector2 = calVector(pointKey, sideKey2);
+		double[] vector1 = calVector(pointKey, sideKey1);
+		double[] vector2 = calVector(pointKey, sideKey2);
 
 		return calTheta(vector1, vector2);
 	}
@@ -337,7 +334,7 @@ public class PoseService {
 		}
 
 		int low = 0;
-		int high = poseData.size();
+		int high = poseData.size()-1;
 		int mid = 0;
 		double closest = poseData.get(0).getTime();
 		
@@ -364,13 +361,28 @@ public class PoseService {
 	}
 
 	/**
-	 * 분석이 종료되면 frame을 초기화하는 함수
+	 * 분석이 시작될때, 객체를 초기화하는 함수
 	 */
-	public void resetFrame() {
+	public void preparePoseAnalyze(String part) {
+
+		if(part.equals("user")){
+			userPoseData = new ArrayList<>();
+		}else{
+			comparePoseData = new ArrayList<>();
+		}
 		frame = 0;
 	}
 
 
+	public void removeVideo(String src){
+
+		File file = new File(src.replace("http://localhost","src/main/webapp"));
+		if(file.delete()){
+			log.info("삭제 성공 !");
+		}else {
+			log.info("삭제 실패 ! = {}", file);
+		}
+	}
 
 
 
