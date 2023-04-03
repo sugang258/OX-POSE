@@ -64,7 +64,6 @@ public class PoseController {
 	@ResponseBody
 	@PostMapping("/setAnalyzePose")
 	public double setAnalyzePose(@RequestBody Map<String, Object> data) {
-//		log.info("data = {}" , data);
 		return poseService.setAnalyzePose(data);
 	}
 	
@@ -77,8 +76,15 @@ public class PoseController {
 	
 	@ResponseBody
 	@PostMapping("/getTimeStampAnalyze")
-	public PoseVO getTimeStampAnalyze(@RequestBody Map<String, Double> data) {
+	public PoseVO getTimeStampAnalyze(@RequestBody Map<String, Object> data) {
 		
-		return poseService.getTimeStampAnalyze(data.get("timeStamp"));
+		return poseService.getTimeStampAnalyze(data);
 	}
+
+	@ResponseBody
+	@PostMapping("/resetFrame")
+	public void resetFrame(){
+		poseService.resetFrame();
+	}
+
 }

@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PoseService {
 
-	private List<PoseVO> allPoseData = new ArrayList<>();
+	private List<PoseVO> userPoseData = new ArrayList<>();
+	private List<PoseVO> comparePoseData = new ArrayList<>();
 	private PoseVO poseVO;
 
 	private int frame = 0;
@@ -30,10 +31,18 @@ public class PoseService {
 	 * @return (임시)
 	 */
 	public double setAnalyzePose(Map<String, Object> data) {
-		List<Map<String, Object>> poseWorldData = (List<Map<String, Object>>) data.get("poseWorldLandmarks");
-		List<Map<String, Object>> poseData = (List<Map<String, Object>>) data.get("poseLandmarks");
+		List<Map<String, Double>> poseWorldLandmarksData = (List<Map<String, Double>>) data.get("poseWorldLandmarks");
+		List<Map<String, Double>> poseLandmarksData = (List<Map<String, Double>>) data.get("poseLandmarks");
+		List<PoseVO> poseData;
 
 		double timestamp = Double.parseDouble(data.get("timestamp").toString());
+
+		if(data.get("part").equals("user")){
+			poseData = userPoseData;
+		}else{
+			poseData = comparePoseData;
+		}
+
 
 		poseVO = new PoseVO();
 
@@ -42,28 +51,28 @@ public class PoseService {
 
 		ArrayList<PoseKeyPoint> poseLandmarks = new ArrayList<>();
 
-		for (int keyPoint = 0; keyPoint < poseData.size(); keyPoint++) {
+		for (int keyPoint = 0; keyPoint < poseLandmarksData.size(); keyPoint++) {
 
 			PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
-			poseKeyPoint.setX(Double.valueOf(poseData.get(keyPoint).get("x").toString()));
-			poseKeyPoint.setY(Double.valueOf(poseData.get(keyPoint).get("y").toString()));
-			poseKeyPoint.setZ(Double.valueOf(poseData.get(keyPoint).get("z").toString()));
-			poseKeyPoint.setVisibility(Double.valueOf(poseData.get(keyPoint).get("visibility").toString()));
+			poseKeyPoint.setX(poseLandmarksData.get(keyPoint).get("x"));
+			poseKeyPoint.setY(poseLandmarksData.get(keyPoint).get("y"));
+			poseKeyPoint.setZ(poseLandmarksData.get(keyPoint).get("z"));
+			poseKeyPoint.setVisibility(poseLandmarksData.get(keyPoint).get("visibility"));
 
 			poseLandmarks.add(poseKeyPoint);
 		}
 		poseVO.setPoseLandmarks(poseLandmarks);
 
-		normalizeData(poseWorldData);
+		normalizeData(poseWorldLandmarksData);
 
 		ArrayList<PoseKeyPoint> poseKeyPoints = new ArrayList<>();
-		for (int keyPoint = 0; keyPoint < poseWorldData.size(); keyPoint++) {
+		for (int keyPoint = 0; keyPoint < poseWorldLandmarksData.size(); keyPoint++) {
 
 			PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
-			poseKeyPoint.setX(Double.valueOf(poseWorldData.get(keyPoint).get("x").toString()));
-			poseKeyPoint.setY(Double.valueOf(poseWorldData.get(keyPoint).get("y").toString()));
-			poseKeyPoint.setZ(Double.valueOf(poseWorldData.get(keyPoint).get("z").toString()));
-			poseKeyPoint.setVisibility(Double.valueOf(poseWorldData.get(keyPoint).get("visibility").toString()));
+			poseKeyPoint.setX(poseWorldLandmarksData.get(keyPoint).get("x"));
+			poseKeyPoint.setY(poseWorldLandmarksData.get(keyPoint).get("y"));
+			poseKeyPoint.setZ(poseWorldLandmarksData.get(keyPoint).get("z"));
+			poseKeyPoint.setVisibility(poseWorldLandmarksData.get(keyPoint).get("visibility"));
 
 			poseKeyPoints.add(poseKeyPoint);
 		}
@@ -80,12 +89,12 @@ public class PoseService {
 		}
 		poseVO.setPoseTheta(poseThetas);
 
-		addMidAnalyze();
+		addMidAnalyze(poseData);
+		poseData.add(poseVO);
 
-		allPoseData.add(poseVO);
 		frame++;
 
-		log.info("frame : {} , time : {} allPoseData.size = {}", frame, timestamp, allPoseData.size());
+		log.info("frame : {} , time : {} size = {}", frame, timestamp, poseData.size());
 		return poseVO.getPoseTheta().get(1).getTheta(); // 임시
 	}
 
@@ -93,10 +102,10 @@ public class PoseService {
 	/**
 	 * 부족한 프레임을 보충하는 함수
 	 */
-	public void addMidAnalyze(){
+	public void addMidAnalyze(List<PoseVO> poseData){
 
-		if (!allPoseData.isEmpty()) {
-			PoseVO previousPoseVO = allPoseData.get(allPoseData.size() - 1);
+		if (!poseData.isEmpty()) {
+			PoseVO previousPoseVO = poseData.get(poseData.size() - 1);
 
 			for(int count = 1 ; count < 3; count ++){
 				PoseVO midPoseVO = new PoseVO();
@@ -135,61 +144,60 @@ public class PoseService {
 					PoseVO.PoseKeyPoint poseKeyPoint = poseVO.new PoseKeyPoint();
 					poseKeyPoint.setX(previousPoseKeyPoints.get(keyPoint).getX() +
 							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
-					poseKeyPoint.setY(previousPoseKeyPoints.get(keyPoint).getX() +
-							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
-					poseKeyPoint.setZ(previousPoseKeyPoints.get(keyPoint).getX() +
-							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
-					poseKeyPoint.setVisibility(previousPoseKeyPoints.get(keyPoint).getX() +
-							((poseKeyPoints.get(keyPoint).getX() - previousPoseKeyPoints.get(keyPoint).getX())* count/ 3));
+					poseKeyPoint.setY(previousPoseKeyPoints.get(keyPoint).getY() +
+							((poseKeyPoints.get(keyPoint).getY() - previousPoseKeyPoints.get(keyPoint).getY())* count/ 3));
+					poseKeyPoint.setZ(previousPoseKeyPoints.get(keyPoint).getZ() +
+							((poseKeyPoints.get(keyPoint).getZ() - previousPoseKeyPoints.get(keyPoint).getZ())* count/ 3));
+					poseKeyPoint.setVisibility(previousPoseKeyPoints.get(keyPoint).getVisibility() +
+							((poseKeyPoints.get(keyPoint).getVisibility() - previousPoseKeyPoints.get(keyPoint).getVisibility())* count/ 3));
 
 					midPoseKeyPoints.add(poseKeyPoint);
 				}
 
 				midPoseVO.setPoseWorldLandmarks(poseKeyPoints);
-
-				allPoseData.add(midPoseVO);
+				poseData.add(midPoseVO);
 
 			}
 		}
 	}
 
 
-
 	/**
 	 * 데이터를 신체 기준의 새로운 축을 기준으로 정규화하는 함수 좌어깨 : 11 / 우어깨 : 12 / 좌엉 : 23 / 우엉 : 24
+	 * @param data : poseWorldLandmarksData
 	 */
-	public void normalizeData(List<Map<String, Object>> data) {
+	public void normalizeData(List<Map<String, Double>> data) {
 
 		// 어깨 중앙선과 엉덩이 중앙선을 구합니다.
 		double[] shoulderCenter = {
-				(Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(12).get("x").toString()))
+				(data.get(11).get("x") +data.get(12).get("x"))
 						/ 2,
-				(Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(12).get("y").toString()))
+				(data.get(11).get("y") + data.get(12).get("y"))
 						/ 2,
-				(Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(12).get("z").toString()))
+				(data.get(11).get("z") + data.get(12).get("z"))
 						/ 2 };
 		double[] hipCenter = {
-				(Double.valueOf(data.get(23).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString()))
+				(data.get(23).get("x") + data.get(24).get("x"))
 						/ 2,
-				(Double.valueOf(data.get(23).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString()))
+				(data.get(23).get("y") + data.get(24).get("y"))
 						/ 2,
-				(Double.valueOf(data.get(23).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString()))
+				(data.get(23).get("z") + data.get(24).get("z"))
 						/ 2 };
 
 		// 옆구리 중앙선을 구합니다.
 		double[] leftSideCenter = {
-				(Double.valueOf(data.get(11).get("x").toString()) + Double.valueOf(data.get(23).get("x").toString()))
+				(data.get(11).get("x") + data.get(23).get("x"))
 						/ 2,
-				(Double.valueOf(data.get(11).get("y").toString()) + Double.valueOf(data.get(23).get("y").toString()))
+				(data.get(11).get("y") + data.get(23).get("y"))
 						/ 2,
-				(Double.valueOf(data.get(11).get("z").toString()) + Double.valueOf(data.get(23).get("z").toString()))
+				(data.get(11).get("z") + data.get(23).get("z"))
 						/ 2 };
 		double[] rightSideCenter = {
-				(Double.valueOf(data.get(12).get("x").toString()) + Double.valueOf(data.get(24).get("x").toString()))
+				(data.get(12).get("x") + data.get(24).get("x"))
 						/ 2,
-				(Double.valueOf(data.get(12).get("y").toString()) + Double.valueOf(data.get(24).get("y").toString()))
+				(data.get(12).get("y") + data.get(24).get("y"))
 						/ 2,
-				(Double.valueOf(data.get(12).get("z").toString()) + Double.valueOf(data.get(24).get("z").toString()))
+				(data.get(12).get("z") + data.get(24).get("z"))
 						/ 2 };
 
 		// 어깨 중앙선과 엉덩이 중앙선을 기준으로 하는 새로운 Y축을 계산합니다.
@@ -205,10 +213,10 @@ public class PoseService {
 		double[] xAxis = crossProduct(zAxis, yAxis);
 		xAxis = normalize(xAxis);
 
-		for (Map<String, Object> keyPoint : data) {
+		for (Map<String, Double> keyPoint : data) {
 
-			double[] point = { Double.valueOf(keyPoint.get("x").toString()),
-					Double.valueOf(keyPoint.get("y").toString()), Double.valueOf(keyPoint.get("z").toString()) };
+			double[] point = { keyPoint.get("x"),
+					keyPoint.get("y"), keyPoint.get("z") };
 
 			keyPoint.put("x", dotProduct(xAxis, point));
 			keyPoint.put("y", dotProduct(yAxis, point));
@@ -218,9 +226,8 @@ public class PoseService {
 
 	/**
 	 * 벡터를 단위 벡터로 정규화 하는 함수
-	 * 
-	 * @param v
-	 * @return
+	 * @param v : 벡터
+	 * @return : 정규화 벡터
 	 */
 	public double[] normalize(double[] v) {
 		double[] unitVector = new double[3];
@@ -318,40 +325,56 @@ public class PoseService {
 	
 	/**
 	 * 주어진 timeStamp와 가장 가까운 Pose 결과를 return 하는 함수
-	 * @param {double}timeStamp
-	 * @return 
-	 * @return 
 	 */
-	public PoseVO getTimeStampAnalyze(double timeStamp) {
-		
+	public PoseVO getTimeStampAnalyze(Map<String, Object> data) {
+		double timeStamp = (double) data.get("timeStamp");
+		List<PoseVO> poseData;
+
+		if(data.get("part").equals("user")){
+			poseData = userPoseData;
+		}else{
+			poseData = comparePoseData;
+		}
+
 		int low = 0;
-		int high = allPoseData.size();
+		int high = poseData.size();
 		int mid = 0;
-		double closest = allPoseData.get(0).getTime();
+		double closest = poseData.get(0).getTime();
 		
 		 while (low <= high) {
 	            mid = (low + high) / 2;
 
-	            if (timeStamp == allPoseData.get(mid).getTime()) {
-	                closest = allPoseData.get(mid).getTime();
+	            if (timeStamp == poseData.get(mid).getTime()) {
+	                closest = poseData.get(mid).getTime();
 	                break;
 	            }
 
-	            if (timeStamp < allPoseData.get(mid).getTime()) {
+	            if (timeStamp < poseData.get(mid).getTime()) {
 	                high = mid - 1;
 	            } else {
 	                low = mid + 1;
 	            }
 
-	            if (Math.abs(allPoseData.get(mid).getTime() - timeStamp) < Math.abs(closest - timeStamp)) {
-	                closest = allPoseData.get(mid).getTime();
+	            if (Math.abs(poseData.get(mid).getTime() - timeStamp) < Math.abs(closest - timeStamp)) {
+	                closest = poseData.get(mid).getTime();
 	            }
 	        }
 		 log.info("timeStamp = {} closest = {} mid = {}" , timeStamp,closest,mid);
-		 return allPoseData.get(mid);
+		 return poseData.get(mid);
 	}
-	
-	
+
+	/**
+	 * 분석이 종료되면 frame을 초기화하는 함수
+	 */
+	public void resetFrame() {
+		frame = 0;
+	}
+
+
+
+
+
+
 	/**
 	 * JS 상에서 resource/static/video 의 파일 갯수를 가져다 주는 함수 현재는 DB연결 전에 사용하려고 작성하였지만, 더는
 	 * 사용하지 않는다.
@@ -403,4 +426,6 @@ public class PoseService {
 //		log.info("dirCnt :  " + dirCnt);
 		return fileNames;
 	}
+
+
 }

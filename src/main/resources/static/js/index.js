@@ -78,16 +78,16 @@ async function Analyze(part) {
     };
     show_video.addEventListener('play', () =>
         setInterval(() => {
-            getTimeStampAnalyze(canvasCtx, show_video.currentTime, grid);
+            getTimeStampAnalyze(canvasCtx, show_video.currentTime, grid , part);
         }, 100)
     );
 
     show_video.addEventListener('seeking', () =>
-        getTimeStampAnalyze(canvasCtx, show_video.currentTime, grid)
+        getTimeStampAnalyze(canvasCtx, show_video.currentTime, grid, part)
     );
 
     comparePose.onResults((results) => {
-        saveAnalyzeData(results, analyze_video.currentTime);
+        saveAnalyzeData(results, part, analyze_video.currentTime);
         drawSkeleton(results, canvasCtx, grid);
     });
 
@@ -111,7 +111,7 @@ async function setPlaybackRate(input_video) {
 
     if (!files || files.length === 0) {
         console.error("No file selected");
-        return;
+        return null;
     }
 
     const formData = new FormData();
@@ -161,6 +161,9 @@ function requestAnalyze(videoElement, canvasCtx, poseModel) {
 //		canvasCtx.drawImage(videoElement, 0, 0, canvasCtx.canvas.width, canvasCtx.canvas.height);
     if (videoElement.paused) { // 비디오 정지시 분석 정지
         videoElement.remove();
+
+        fetch("resetFrame",{method : "POST"});
+        console.log("프레임 초기화");
         return;
     }
     requestAnimationFrame(() =>
@@ -174,13 +177,14 @@ function requestAnalyze(videoElement, canvasCtx, poseModel) {
  * @param timeStamp
  * @param grid
  */
-function getTimeStampAnalyze(canvasCtx, timeStamp, grid) {
+function getTimeStampAnalyze(canvasCtx, timeStamp, grid, part) {
 
     if (timeStamp === 0) {
         return;
     }
     const data = {
-        timeStamp: timeStamp
+        timeStamp: timeStamp,
+        part : part,
     }
     const options = {
         method: "POST",
@@ -260,12 +264,13 @@ function drawSkeleton(results, canvasCtx, grid) {
  * @param results
  * @param timestamp
  */
-function saveAnalyzeData(results, timestamp) {
+function saveAnalyzeData(results, part, timestamp) {
     if (results.poseWorldLandmarks) {
         const jsonData = JSON.stringify({
             poseWorldLandmarks: results.poseWorldLandmarks,
             poseLandmarks: results.poseLandmarks,
             timestamp: timestamp,
+            part: part,
         });
         $.ajax({
             type: 'POST',
