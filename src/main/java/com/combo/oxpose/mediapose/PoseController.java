@@ -94,4 +94,12 @@ public class PoseController {
 		poseService.removeVideo(src);
 	}
 
+	@ResponseBody
+	@PostMapping("/analyzeTest")
+	public void analyzeTest(){
+
+
+
+		poseService.analyzeTest();
+	}
 }

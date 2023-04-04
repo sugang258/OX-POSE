@@ -126,13 +126,16 @@
  .compare_landmark_grid_container , .user_landmark_grid_container {
       height: 100%;
       width: 100%;
-      background-color: #99999999;
+      background-color: #e9ebec;
     }
     .square-box {
-      width: 400px;
+	  width: 400px;
       height: 400px;
-     
+	  background-color: #e9ebec;
     }
+	.controls{
+		background-color: #e9ebec;
+	}
     
     
 
@@ -143,7 +146,7 @@
 <script
 	src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"
 	crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<%--    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>--%>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils_3d/control_utils_3d.js" crossorigin="anonymous"></script>
 <script
 	src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"
@@ -164,6 +167,7 @@
 	<div>
 		<input id="video_ratio" type="range" min="0.5" max="1.6" step="any">
 		<label for="video_ratio">영상 비율</label>
+		<button id = "analyze_btn"> 분석 시작 </button>
 	</div>
 
 
@@ -235,7 +239,7 @@
 
 	
 
-
+<%-- 영상선택 모달 --%>
 	<div class="modal_background"></div>
 	<div class="modal">
 		<div class="modal_body">

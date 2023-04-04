@@ -4,7 +4,7 @@ const user_video_btn = document.getElementById("user_video_btn");
 const user_live_button = document.getElementById("user_live_button");
 const compare_video_btn = document.getElementById("compare_video_btn");
 const compare_input_video = document.getElementById("compare_input_video");
-
+const analyze_btn = document.getElementById("analyze_btn");
 const user_result = document.querySelector(".user_result");
 
 // keyPoint 구분
@@ -221,6 +221,7 @@ function getTimeStampAnalyze(canvasCtx, timeStamp, grid, part) {
  * @param grid - 3D 캔버스
  */
 function drawSkeleton(results, canvasCtx, grid) {
+    console.log(results);
     if (results.poseLandmarks) {
         let leftKeyPoint = [];
         let rightKeyPoint = [];
@@ -313,6 +314,14 @@ function deleteVideo(show_video, analyze_video) {
 
 
 
+analyze_btn.addEventListener("click", function (){
+    console.log("분석 버튼 클릭");
+
+    fetch("analyzeTest",{
+        method:"POST",
+    })
+})
+
 
 
 
@@ -403,7 +412,7 @@ class CustomLandmarkGrid extends LandmarkGrid {
 
     render() {
         this.config.isRotating = false; // 회전을 완전히 비활성화하려면
-        this.config.rotationSpeed = 1;  // 회전 속도를 조절하려면 [0,1]
+        // this.config.rotationSpeed = 1;  // 회전 속도를 조절하려면 [0,1]
 
         super.render();
     }
