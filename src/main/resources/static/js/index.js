@@ -5,6 +5,8 @@ const user_live_button = document.getElementById("user_live_button");
 const compare_video_btn = document.getElementById("compare_video_btn");
 const compare_input_video = document.getElementById("compare_input_video");
 const analyze_btn = document.getElementById("analyze_btn");
+const analyzeAll_btn = document.getElementById("analyzeAll_btn");
+
 const user_result = document.querySelector(".user_result");
 
 // keyPoint 구분
@@ -221,7 +223,7 @@ function getTimeStampAnalyze(canvasCtx, timeStamp, grid, part) {
  * @param grid - 3D 캔버스
  */
 function drawSkeleton(results, canvasCtx, grid) {
-    console.log(results);
+    // console.log(results);
     if (results.poseLandmarks) {
         let leftKeyPoint = [];
         let rightKeyPoint = [];
@@ -316,13 +318,32 @@ function deleteVideo(show_video, analyze_video) {
 
 analyze_btn.addEventListener("click", function (){
     console.log("분석 버튼 클릭");
+    const compareVideo = document.getElementsByClassName('compare_video_box')[0].querySelector('video');
+    const userVideo = document.getElementsByClassName('user_video_box')[0].querySelector('video');
 
-    fetch("analyzeTest",{
-        method:"POST",
+    const jsonData = JSON.stringify({
+        compareTimeStamp: compareVideo.currentTime,
+        userTimeStamp: userVideo.currentTime,
+    });
+
+
+    fetch("matchCurrentPose", {
+        method : "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body : jsonData
     })
 })
 
 
+analyzeAll_btn.addEventListener("click", function (){
+    console.log("전체 분석 버튼 클릭");
+
+    fetch("matchAllPose", {
+        method : "POST",
+    })
+})
 
 
 

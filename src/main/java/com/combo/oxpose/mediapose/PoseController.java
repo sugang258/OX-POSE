@@ -95,11 +95,16 @@ public class PoseController {
 	}
 
 	@ResponseBody
-	@PostMapping("/analyzeTest")
-	public void analyzeTest(){
+	@PostMapping("/matchCurrentPose")
+	public void matchCurrentPose(@RequestBody Map<String, Double> data){
 
+		log.info("data = {}" , data);
+		poseService.matchCurrentPose(data);
+	}
 
-
-		poseService.analyzeTest();
+	@ResponseBody
+	@PostMapping("/matchAllPose")
+	public void matchAllPose(){
+		poseService.matchAllPose();
 	}
 }

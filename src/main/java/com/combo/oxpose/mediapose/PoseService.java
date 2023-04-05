@@ -363,6 +363,36 @@ public class PoseService {
         return poseData.get(mid);
     }
 
+    public PoseVO getTimeStampAnalyze(List<PoseVO> poseData, double timeStamp){
+        int low = 0;
+        int high = poseData.size() - 1;
+        int mid = 0;
+        double closest = poseData.get(0).getTime();
+
+        while (low <= high) {
+            mid = (low + high) / 2;
+
+            if (timeStamp == poseData.get(mid).getTime()) {
+                closest = poseData.get(mid).getTime();
+                break;
+            }
+
+            if (timeStamp < poseData.get(mid).getTime()) {
+                high = mid - 1;
+            } else {
+                low = mid + 1;
+            }
+
+            if (Math.abs(poseData.get(mid).getTime() - timeStamp) < Math.abs(closest - timeStamp)) {
+                closest = poseData.get(mid).getTime();
+            }
+        }
+        log.info("timeStamp = {} closest = {} mid = {}", timeStamp, closest, mid);
+        return poseData.get(mid);
+    }
+
+
+
     /**
      * 분석이 시작될때, 객체를 초기화하는 함수
      */
@@ -407,9 +437,9 @@ public class PoseService {
 
     /**
      * 가중치 유사도를 계산하는 함수
-     * @param poseVO
-     * @param poseVO2
-     * @return
+     * @param poseVO 자세 1
+     * @param poseVO2 자세 2
+     * @return 가중치 유사도
      */
     public double weightedDistanceMatching(PoseVO poseVO , PoseVO poseVO2) {
         double vector1ConfidenceSum = 0;
@@ -437,10 +467,13 @@ public class PoseService {
         return summation1 * summation2;
     }
 
-    public void analyzeTest(){
-
-        PoseVO poseVO1 = userPoseData.get(userPoseData.size()-1);
-        PoseVO poseVO2 = comparePoseData.get(comparePoseData.size()-1);
+    /**
+     * 분석하기 버튼으로, 비교영상의 현재 자세와, 사용자 영상의
+     * @param data
+     */
+    public void matchCurrentPose(Map<String, Double> data){
+        PoseVO poseVO1 = getTimeStampAnalyze(comparePoseData, data.get("compareTimeStamp"));
+        PoseVO poseVO2 =  getTimeStampAnalyze(userPoseData, data.get("userTimeStamp"));
 
 
         log.info("weight = {}", weightedDistanceMatching(poseVO1, poseVO2));
@@ -454,9 +487,49 @@ public class PoseService {
                     ,poseVO2.getPoseWorldLandmarks().get(i).getZ()};
 
 
-            log.info("consine = {}", cosineSimilarity(newData, newData2));
+            log.info("index = {}   consine = {}",i, cosineSimilarity(newData, newData2));
         }
     }
+
+    /**
+     *  현재 사용자 영상과 비교 영상의 가중치거리를 측정하는 함수
+     */
+    public void matchAllPose(){
+
+        double [][] weightedDistance = new double[userPoseData.size()+1][comparePoseData.size()+1];
+        int [][] dp = new int[userPoseData.size()+1][comparePoseData.size()+1];
+        int max = 0;
+        int maxI = 0;
+        int maxJ = 0;
+
+        for(int i = 1 ;  i <= userPoseData.size(); i++){
+            for(int j = 1 ;  j <= comparePoseData.size(); j++){
+                weightedDistance[i][j] = weightedDistanceMatching(userPoseData.get(i-1) , comparePoseData.get(j-1));
+                if(weightedDistance[i][j] < 0.2){
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                    if(dp[i][j] < max){
+                        continue;
+                    }
+                    max = dp[i][j];
+                    maxI = i;
+                    maxJ = j;
+                }
+
+            }
+        }
+
+        for(int i = 0 ;  i < userPoseData.size(); i++){
+            log.info("distance = {}" , Arrays.toString(weightedDistance[i]));
+        }
+
+        log.info("max = {}  i = {}   j = {} " , max, maxI, maxJ);
+        log.info("start userFrame = {}   start compareFrame = {} " ,  maxI - max, maxJ - max);
+    }
+
+
+
+
+
 
 
 

@@ -167,7 +167,9 @@
 	<div>
 		<input id="video_ratio" type="range" min="0.5" max="1.6" step="any">
 		<label for="video_ratio">영상 비율</label>
-		<button id = "analyze_btn"> 분석 시작 </button>
+		<button id = "analyze_btn"> 현재 자세 측정</button>
+
+		<button id = "analyzeAll_btn"> 전체 자세 측정</button>
 	</div>
 
 
